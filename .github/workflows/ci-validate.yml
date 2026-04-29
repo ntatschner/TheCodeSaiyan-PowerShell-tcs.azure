@@ -1,0 +1,82 @@
+name: CI - Validate Module
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'modules/**'
+      - 'PSScriptAnalyzerSettings.psd1'
+      - '.github/workflows/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'modules/**'
+      - 'PSScriptAnalyzerSettings.psd1'
+      - '.github/workflows/**'
+
+jobs:
+  validate:
+    name: Validate Module
+    uses: ntatschner/tcs-shared-workflows/.github/workflows/ci-validate.yml@main
+    with:
+      module-name: 'tcs.azure'
+      module-path: 'modules/tcs.azure'
+
+  lint:
+    name: PSScriptAnalyzer Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $settingsPath = Join-Path $env:GITHUB_WORKSPACE 'PSScriptAnalyzerSettings.psd1'
+          $results = Invoke-ScriptAnalyzer -Path (Join-Path $env:GITHUB_WORKSPACE 'modules/tcs.azure') -Recurse -Severity @('Error','Warning') -Settings $settingsPath
+          if ($results) {
+              $results | Format-Table ScriptName, Line, RuleName, Message -Wrap
+              $errorCount = ($results | Where-Object Severity -eq 'Error').Count
+              if ($errorCount -gt 0) {
+                  Write-Error "PSScriptAnalyzer found $errorCount error(s). Failing build."
+                  exit 1
+              }
+          } else {
+              Write-Host 'No PSScriptAnalyzer issues found.' -ForegroundColor Green
+          }
+
+  pester:
+    name: Pester Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module Pester -MinimumVersion 5.0 -Force -Scope CurrentUser
+
+      - name: Run Pester
+        shell: pwsh
+        run: |
+          $config = New-PesterConfiguration
+          $config.Run.Path = Join-Path $env:GITHUB_WORKSPACE 'modules/tcs.azure'
+          $config.Run.Exit = $false
+          $config.Output.Verbosity = 'Normal'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = Join-Path $env:GITHUB_WORKSPACE 'TestResults.xml'
+          $config.TestResult.OutputFormat = 'JUnitXml'
+          $result = Invoke-Pester -Configuration $config
+          if ($result.FailedCount -gt 0) {
+              Write-Error "$($result.FailedCount) test(s) failed"
+              exit 1
+          }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pester-results
+          path: TestResults.xml
