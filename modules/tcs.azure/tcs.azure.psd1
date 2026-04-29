@@ -14,62 +14,45 @@
 # Version number of this module.
 ModuleVersion = '0.0.1'
 
-# Supported PSEditions
-# CompatiblePSEditions = @()
-
-# ID used to uniquely identify this module
 GUID = '9d6151da-f9cf-4606-a985-d3f5c463d419'
 
-# Author of this module
 Author = 'Nigel Tatschner'
 
-# Company or vendor of this module
 CompanyName = 'Rothesay'
 
-# Copyright statement for this module
 Copyright = '(c) 2024 Nigel Tatschner. All rights reserved.'
 
-# Description of the functionality provided by this module
 Description = 'Helper Functions for Microsoft Azure'
 
-# Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '5.1'
 
-# Modules that must be imported into the global environment prior to importing this module
 RequiredModules = @('tcs.core')
 
-# Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 NestedModules = @('tcs.azure.psm1')
 
-# Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
-    'Get-IntuneAppGroups',
-    'Set-IntuneAppGroups'
+    'New-IntuneAppGroup',
+    'New-TcsDepartmentalGroup'
 )
 
-# Cmdlets to export from this module
 CmdletsToExport = @()
 
-# Variables to export from this module
 VariablesToExport = @()
 
-# Aliases to export from this module
 AliasesToExport = @()
 
 PrivateData = @{
 
     PSData = @{
 
-        # Tags applied to this module. These help with module discovery in online galleries.
         Tags = @("azure", "intune", "microsoft", "groups")
 
-        # ReleaseNotes of this module
         ReleaseNotes = 'Adding helper functions for Intune App Groups.'
 
         ExternalModuleDependencies = @('Microsoft.Graph.Entra')
 
-    } # End of PSData hashtable
+    }
 
-} # End of PrivateData hashtable
+}
 
 }
