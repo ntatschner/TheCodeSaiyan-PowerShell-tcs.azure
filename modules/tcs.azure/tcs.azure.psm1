@@ -1,25 +1,34 @@
 #region get public and private function definition files.
 $Public  = @(
-    Get-ChildItem -Path $PSScriptRoot\Public\*.ps1 -Exclude "*.Tests.ps1" -ErrorAction SilentlyContinue
+    Get-ChildItem -Path $PSScriptRoot\Public\*.ps1 -Exclude "*.Tests.ps1" -ErrorAction SilentlyContinue -Recurse
 )
 $Private = @(
-    Get-ChildItem -Path $PSScriptRoot\Private\*.ps1 -Exclude "*.Tests.ps1" -ErrorAction SilentlyContinue
+    Get-ChildItem -Path $PSScriptRoot\Private\*.ps1 -Exclude "*.Tests.ps1" -ErrorAction SilentlyContinue -Recurse
 )
+#endregion
+
+#region load Classes before functions
+$ClassFiles = @(
+    Get-ChildItem -Path $PSScriptRoot\Classes\*.ps1 -Exclude "*.Tests.ps1" -ErrorAction SilentlyContinue -Recurse
+)
+foreach ($Class in $ClassFiles) {
+    try {
+        . $Class.FullName
+    } catch {
+        Write-Error -Message "Failed to import class at $($Class.FullName): $_"
+    }
+}
 #endregion
 
 #region source the files
 foreach ($Function in @($Public + $Private)) {
     $FunctionPath = $Function.fullname
     try {
-	. $FunctionPath # dot source function
+        . $FunctionPath
     } catch {
-	Write-Error -Message "Failed to import function at $($FunctionPath): $_"
+        Write-Error -Message "Failed to import function at $($FunctionPath): $_"
     }
 }
-#endregion
-
-#region read in or create an initial config file and variable
-#. "$PSScriptRoot\Config.ps1" # uncomment to source config parsing logic
 #endregion
 
 #region set variables visible to the module and its functions only
@@ -32,8 +41,9 @@ $Time = Get-Date -UFormat "%H:%M:%S"
 Export-ModuleMember -Function $Public.Basename
 #endregion
 
-# Module Config setup and import
+#region Module Config setup and import
 $CurrentConfig = Get-ModuleConfig
-if ($CurrentConfig.UpdateWarning -eq 'True') {
+if ($CurrentConfig.UpdateWarning -eq 'True' -or $CurrentConfig.UpdateWarning -eq $true) {
     Get-ModuleStatus -ShowMessage -ModuleName $CurrentConfig.ModuleName -ModulePath $CurrentConfig.ModulePath
 }
+#endregion
