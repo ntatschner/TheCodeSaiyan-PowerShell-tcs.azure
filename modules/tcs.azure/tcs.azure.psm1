@@ -42,7 +42,32 @@ Export-ModuleMember -Function $Public.Basename
 #endregion
 
 #region Module Config setup and import
-$CurrentConfig = Get-ModuleConfig
+try {
+    $CurrentConfig = Get-ModuleConfig -CommandPath $PSCommandPath -ErrorAction Stop
+}
+catch {
+    Write-Error "Module Import error: `n $($_.Exception.Message)"
+}
+
+$ExecutionID = [System.Guid]::NewGuid().ToString()
+
+$TelmetryArgs = @{
+    ModuleName    = $CurrentConfig.ModuleName
+    ModulePath    = $CurrentConfig.ModulePath
+    ModuleVersion = $MyInvocation.MyCommand.Module.Version
+    ExecutionID   = $ExecutionID
+    CommandName   = $MyInvocation.MyCommand.Name
+    URI           = 'https://NOTYETDEFINED.com'
+    ClearTimer    = $true
+    Stage         = 'Module-Load'
+}
+
+if ($CurrentConfig.BasicTelemetry -eq 'True') {
+    Invoke-TelemetryCollection -Minimal @TelmetryArgs
+} else {
+    Invoke-TelemetryCollection @TelmetryArgs
+}
+
 if ($CurrentConfig.UpdateWarning -eq 'True' -or $CurrentConfig.UpdateWarning -eq $true) {
     Get-ModuleStatus -ShowMessage -ModuleName $CurrentConfig.ModuleName -ModulePath $CurrentConfig.ModulePath
 }
