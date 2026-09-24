@@ -1,0 +1,1240 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<helpItems schema="maml" xmlns="http://msh">
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-DepartmentalGroupName</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>DepartmentalGroupName</command:noun>
+      <maml:description>
+        <maml:para>Builds a standardised departmental group name.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>The Get-DepartmentalGroupName function builds a group name from a prefix, a division, an optional department and an optional suffix, separated by hyphens. It only returns the name; it does not create anything in Microsoft Entra ID or Azure (use New-TcsEntraDepartmentalGroup for that).</maml:para>
+      <maml:para>This command was called New-TcsDepartmentalGroup before version 0.2.0; that name still works as an alias.</maml:para>
+      <maml:para>Naming rules:   - '&amp;' is read as 'and'. Apostrophes are removed ("Children's" -&gt; 'Childrens'). Any other character     that is not a letter, digit, space or hyphen (for example , ( ) / \ . :) is treated as a space.   - Words are joined in PascalCase: the first letter of each word is upper-cased and the rest is kept     as written, so acronyms stay as they are ('IT' -&gt; 'IT', 'human resources' -&gt; 'HumanResources').     Culture-independent (invariant) casing is used, so the result is the same under any culture.   - A hyphen inside a word ('E-Commerce') is kept. A hyphen on its own, or at the start or end of a     word, separates parts of the name: 'Accounts Payable - UK' -&gt; 'AccountsPayable-UK'. Stray     hyphens and empty parts are dropped ('HR -' -&gt; 'HR').   - Without a department, the division is used in full ('SG-HumanResources').   - With a department, the division is abbreviated to the initials of its words and the department     is written in PascalCase ('SG-HR-Payroll'). All-caps words of 2 to 4 characters (acronyms) are     kept whole in the initials ('IT Services' -&gt; 'ITS'), and the words and, of, the and &amp; are     skipped ('Sales &amp; Marketing' -&gt; 'SM').     Leading parts of the department that repeat the initials or the division ('HR - Payroll') are removed.   - A part that repeats the part before it is not added twice ('HR' with department 'HR' -&gt; 'SG-HR').   - A division with no letters or digits left after clean-up (for example ',' or '&amp;') is rejected     with an error.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-DepartmentalGroupName</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+          <maml:name>Prefix</maml:name>
+          <maml:description>
+            <maml:para>The first part of the group name, for example 'SG' or 'DL'. Cannot contain whitespace. Accepts pipeline input by property name.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+          <maml:name>Suffix</maml:name>
+          <maml:description>
+            <maml:para>An optional last part of the group name, for example 'Users'. Cannot contain whitespace. Accepts pipeline input by property name.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="3" aliases="none">
+          <maml:name>Division</maml:name>
+          <maml:description>
+            <maml:para>The division the group belongs to, for example 'Human Resources'. Accepts pipeline input by property name, so a CSV with a Division column can be piped in.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="4" aliases="none">
+          <maml:name>Department</maml:name>
+          <maml:description>
+            <maml:para>The optional department within the division, for example 'Payroll'. When supplied, the division is abbreviated to its initials. Accepts pipeline input by property name.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+        <maml:name>Prefix</maml:name>
+        <maml:description>
+          <maml:para>The first part of the group name, for example 'SG' or 'DL'. Cannot contain whitespace. Accepts pipeline input by property name.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+        <maml:name>Suffix</maml:name>
+        <maml:description>
+          <maml:para>An optional last part of the group name, for example 'Users'. Cannot contain whitespace. Accepts pipeline input by property name.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="3" aliases="none">
+        <maml:name>Division</maml:name>
+        <maml:description>
+          <maml:para>The division the group belongs to, for example 'Human Resources'. Accepts pipeline input by property name, so a CSV with a Division column can be piped in.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="4" aliases="none">
+        <maml:name>Department</maml:name>
+        <maml:description>
+          <maml:para>The optional department within the division, for example 'Payroll'. When supplied, the division is abbreviated to its initials. Accepts pipeline input by property name.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>Objects with Prefix, Suffix, Division and Department properties (for example rows from Import-Csv).</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Author: Nigel Tatschner Company: TheCodeSaiyan</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-DepartmentalGroupName -Prefix 'SG' -Division 'Human Resources'</dev:code>
+        <dev:remarks>
+          <maml:para>Returns 'SG-HumanResources'.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Get-DepartmentalGroupName -Prefix 'SG' -Division 'Human Resources' -Department 'HR - Payroll &amp; Benefits' -Suffix 'Users'</dev:code>
+        <dev:remarks>
+          <maml:para>Returns 'SG-HR-PayrollAndBenefits-Users'.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>Import-Csv .\departments.csv | Get-DepartmentalGroupName -Prefix 'SG'</dev:code>
+        <dev:remarks>
+          <maml:para>Returns one name for each row; the CSV has Division and Department columns.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks />
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-IntuneAppGroup</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>IntuneAppGroup</command:noun>
+      <maml:description>
+        <maml:para>Gets Intune app assignment groups from Microsoft Entra ID.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>The Get-IntuneAppGroup function finds the groups created by New-IntuneAppGroup. With -Name it returns the app groups and app collection groups of those applications ('Intune-AG-&lt;Name&gt;-&lt;Intent&gt;' and 'Intune-ACG-&lt;Name&gt;-&lt;Intent&gt;'); the name is converted to PascalCase the same way as in New-IntuneAppGroup. With -All it returns every group whose name starts with 'Intune-AG-' or 'Intune-ACG-'.</maml:para>
+      <maml:para>Groups are found with a startswith filter on the display name (all result pages). Each group is returned as a Tcs.Azure.IntuneAppGroup object with Name, Id, AppName, Intent, Status ('Existing') and MailNickname, so it can be piped to Remove-IntuneAppGroup. AppName and Intent are read from the group name and are empty for a group that does not follow the naming pattern.</maml:para>
+      <maml:para>Requires the Microsoft Entra PowerShell module (Microsoft.Entra or Microsoft.Entra.Groups) and a session opened with Connect-Entra that can read groups, for example the Group.Read.All scope.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-IntuneAppGroup</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="AppName">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>One or more application names. Accepts pipeline input.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+      <command:syntaxItem>
+        <maml:name>Get-IntuneAppGroup</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>All</maml:name>
+          <maml:description>
+            <maml:para>Return every group whose name starts with 'Intune-AG-' or 'Intune-ACG-'.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="AppName">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>One or more application names. Accepts pipeline input.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>All</maml:name>
+        <maml:description>
+          <maml:para>Return every group whose name starts with 'Intune-AG-' or 'Intune-ACG-'.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>Application names.</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>Tcs.Azure.IntuneAppGroup</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Author: Nigel Tatschner Company: TheCodeSaiyan</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-IntuneAppGroup -Name 'Company Portal'</dev:code>
+        <dev:remarks>
+          <maml:para>Returns Intune-AG-CompanyPortal-Available, Intune-AG-CompanyPortal-Required and any other groups for Company Portal that exist.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Get-IntuneAppGroup -All | Group-Object -Property AppName</dev:code>
+        <dev:remarks>
+          <maml:para>Lists every Intune app group, grouped by application.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>New-IntuneAppGroup</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Remove-IntuneAppGroup</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>https://learn.microsoft.com/powershell/module/microsoft.entra.groups/get-entragroup</maml:linkText>
+        <maml:uri>https://learn.microsoft.com/powershell/module/microsoft.entra.groups/get-entragroup</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>New-IntuneAppGroup</command:name>
+      <command:verb>New</command:verb>
+      <command:noun>IntuneAppGroup</command:noun>
+      <maml:description>
+        <maml:para>Creates Intune app assignment groups (for example "Available" and "Required") in Microsoft Entra ID.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>The New-IntuneAppGroup function creates one security group in Microsoft Entra ID for each application name and each assignment intent. By default the "Available" and "Required" groups are created; use -Intent to choose (Available, Required, Uninstall).</maml:para>
+      <maml:para>Groups are named 'Intune-AG-&lt;Name&gt;-&lt;Intent&gt;' (app groups) or 'Intune-ACG-&lt;Name&gt;-&lt;Intent&gt;' (app collection groups, with -Collection). The name is written in PascalCase with spaces removed: the first letter of each word is upper-cased (culture-independent) and the rest is kept, for example 'company portal' becomes 'CompanyPortal' and '7-zip' stays '7-zip'. The description is 'Intune &lt;Intent&gt; assignment group for &lt;Name&gt;.'</maml:para>
+      <maml:para>The mail nickname is the group name made valid for Entra ID: accents are removed (an A with an umlaut becomes A), characters Entra ID does not allow are removed, a name with no usable characters left gets a short stable hash instead, and a nickname longer than 64 characters is shortened with a hash of the full group name added, so different applications keep different nicknames.</maml:para>
+      <maml:para>Each group is looked up first. An existing group (same display name) is not created again: a warning is written and it is returned with Status 'Existing'. Only groups that do not exist yet are passed to -WhatIf/-Confirm and created.</maml:para>
+      <maml:para>For every group an object is written to the pipeline with the properties Name, Id, AppName, Intent, Status (Created, Existing, Failed or WhatIf) and MailNickname. DisplayName is an alias of Name.</maml:para>
+      <maml:para>Requires the Microsoft Entra PowerShell module (Microsoft.Entra or Microsoft.Entra.Groups) and an authenticated session (Connect-Entra) with permission to create groups, for example the Group.ReadWrite.All scope. When Get-EntraContext shows no session, the command stops with one error asking you to run Connect-Entra. Supports -WhatIf and -Confirm.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>New-IntuneAppGroup</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="AppName, DisplayName">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>One or more application names. One group is created for each name and intent. Accepts pipeline input, and pipeline input by property name (Name, AppName or DisplayName).</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Intent</maml:name>
+          <maml:description>
+            <maml:para>The assignment intents to create groups for: Available, Required and/or Uninstall. The default is Available and Required.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>@('Available', 'Required')</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Collection</maml:name>
+          <maml:description>
+            <maml:para>Create app collection groups ('Intune-ACG-...') instead of app groups ('Intune-AG-...').</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="AppName, DisplayName">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>One or more application names. One group is created for each name and intent. Accepts pipeline input, and pipeline input by property name (Name, AppName or DisplayName).</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Intent</maml:name>
+        <maml:description>
+          <maml:para>The assignment intents to create groups for: Available, Required and/or Uninstall. The default is Available and Required.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>@('Available', 'Required')</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Collection</maml:name>
+        <maml:description>
+          <maml:para>Create app collection groups ('Intune-ACG-...') instead of app groups ('Intune-AG-...').</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>Application names.</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>Objects with a Name, AppName or DisplayName property.</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>Tcs.Azure.IntuneAppGroup</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>One object for each group, with Name, Id, AppName, Intent, Status and MailNickname.</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Author: Nigel Tatschner Company: TheCodeSaiyan</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>New-IntuneAppGroup -Name 'App1', 'App2'</dev:code>
+        <dev:remarks>
+          <maml:para>Creates Intune-AG-App1-Available, Intune-AG-App1-Required, Intune-AG-App2-Available and Intune-AG-App2-Required, and returns an object for each of them.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>New-IntuneAppGroup -Collection -Name 'office apps' -WhatIf</dev:code>
+        <dev:remarks>
+          <maml:para>Shows that Intune-ACG-OfficeApps-Available and Intune-ACG-OfficeApps-Required would be created, without creating them. Groups that already exist are returned with Status 'Existing'.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>'Company Portal', '7-Zip' | New-IntuneAppGroup -Intent Required, Uninstall</dev:code>
+        <dev:remarks>
+          <maml:para>Creates the Required and Uninstall groups for both applications.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 4 --------------------------</maml:title>
+        <dev:code>New-IntuneAppGroup -Name 'Company Portal' | Where-Object Status -EQ 'Created'</dev:code>
+        <dev:remarks>
+          <maml:para>Returns only the groups that were created by this run.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-IntuneAppGroup</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Remove-IntuneAppGroup</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>https://learn.microsoft.com/powershell/module/microsoft.entra.groups/new-entragroup</maml:linkText>
+        <maml:uri>https://learn.microsoft.com/powershell/module/microsoft.entra.groups/new-entragroup</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>New-TcsEntraDepartmentalGroup</command:name>
+      <command:verb>New</command:verb>
+      <command:noun>TcsEntraDepartmentalGroup</command:noun>
+      <maml:description>
+        <maml:para>Creates a departmental security group in Microsoft Entra ID.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>The New-TcsEntraDepartmentalGroup function builds a group name with the same rules as Get-DepartmentalGroupName (see Get-Help Get-DepartmentalGroupName) and creates a security group with that name in Microsoft Entra ID.</maml:para>
+      <maml:para>The group is looked up first. An existing group (same display name) is not created again: a warning is written and it is returned with Status 'Existing'. Only groups that do not exist yet are passed to -WhatIf/-Confirm and created.</maml:para>
+      <maml:para>With -DynamicMembership the group gets the membership rule (user.department -eq "&lt;Department&gt;"), using the department as written (or the division when no department is given), and membershipRuleProcessingState On, so Entra ID keeps the members up to date. Dynamic membership groups need a Microsoft Entra ID P1 licence. The Microsoft.Entra.Groups New-EntraGroup (1.x) has no -MembershipRule parameter; in that case New-EntraBetaGroup from Microsoft.Entra.Beta.Groups is used, and the command stops with an error when neither supports it.</maml:para>
+      <maml:para>With -Owner the given users or service principals are added as owners (Add-EntraGroupOwner).</maml:para>
+      <maml:para>For every group an object is written to the pipeline with the properties Name, Id, Status (Created, Existing, Failed or WhatIf), MembershipRule and MailNickname.</maml:para>
+      <maml:para>Requires the Microsoft Entra PowerShell module (Microsoft.Entra or Microsoft.Entra.Groups) and a session opened with Connect-Entra that can create groups, for example the Group.ReadWrite.All scope. Supports -WhatIf and -Confirm.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>New-TcsEntraDepartmentalGroup</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+          <maml:name>Prefix</maml:name>
+          <maml:description>
+            <maml:para>The first part of the group name, for example 'SG'. Cannot contain whitespace. Accepts pipeline input by property name.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+          <maml:name>Suffix</maml:name>
+          <maml:description>
+            <maml:para>An optional last part of the group name, for example 'Users'. Cannot contain whitespace. Accepts pipeline input by property name.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="3" aliases="none">
+          <maml:name>Division</maml:name>
+          <maml:description>
+            <maml:para>The division the group belongs to, for example 'Human Resources'. Accepts pipeline input by property name.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="4" aliases="none">
+          <maml:name>Department</maml:name>
+          <maml:description>
+            <maml:para>The optional department within the division, for example 'Payroll'. Accepts pipeline input by property name. With -DynamicMembership this is the value matched against user.department.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="5" aliases="none">
+          <maml:name>Owner</maml:name>
+          <maml:description>
+            <maml:para>Object IDs of users or service principals to add as owners of a created group.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>DynamicMembership</maml:name>
+          <maml:description>
+            <maml:para>Create a dynamic membership group with the rule (user.department -eq "&lt;Department&gt;"), or the division when no department is given.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+        <maml:name>Prefix</maml:name>
+        <maml:description>
+          <maml:para>The first part of the group name, for example 'SG'. Cannot contain whitespace. Accepts pipeline input by property name.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+        <maml:name>Suffix</maml:name>
+        <maml:description>
+          <maml:para>An optional last part of the group name, for example 'Users'. Cannot contain whitespace. Accepts pipeline input by property name.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="3" aliases="none">
+        <maml:name>Division</maml:name>
+        <maml:description>
+          <maml:para>The division the group belongs to, for example 'Human Resources'. Accepts pipeline input by property name.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="4" aliases="none">
+        <maml:name>Department</maml:name>
+        <maml:description>
+          <maml:para>The optional department within the division, for example 'Payroll'. Accepts pipeline input by property name. With -DynamicMembership this is the value matched against user.department.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>DynamicMembership</maml:name>
+        <maml:description>
+          <maml:para>Create a dynamic membership group with the rule (user.department -eq "&lt;Department&gt;"), or the division when no department is given.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="5" aliases="none">
+        <maml:name>Owner</maml:name>
+        <maml:description>
+          <maml:para>Object IDs of users or service principals to add as owners of a created group.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>Objects with Prefix, Suffix, Division and Department properties (for example rows from Import-Csv).</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>Tcs.Azure.DepartmentalGroup</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>One object for each group, with Name, Id, Status, MembershipRule and MailNickname.</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Author: Nigel Tatschner Company: TheCodeSaiyan</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>New-TcsEntraDepartmentalGroup -Prefix 'SG' -Division 'Human Resources' -Department 'Payroll' -WhatIf</dev:code>
+        <dev:remarks>
+          <maml:para>Shows that the security group SG-HR-Payroll would be created.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>New-TcsEntraDepartmentalGroup -Prefix 'SG' -Division 'Finance' -Department 'Accounts Payable' -DynamicMembership -Owner $ownerId</dev:code>
+        <dev:remarks>
+          <maml:para>Creates SG-F-AccountsPayable with the rule (user.department -eq "Accounts Payable") and adds an owner.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>Import-Csv .\departments.csv | New-TcsEntraDepartmentalGroup -Prefix 'SG' -Suffix 'Users'</dev:code>
+        <dev:remarks>
+          <maml:para>Creates one group for each row; the CSV has Division and Department columns.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-DepartmentalGroupName</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>https://learn.microsoft.com/entra/identity/users/groups-dynamic-membership</maml:linkText>
+        <maml:uri>https://learn.microsoft.com/entra/identity/users/groups-dynamic-membership</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Remove-IntuneAppGroup</command:name>
+      <command:verb>Remove</command:verb>
+      <command:noun>IntuneAppGroup</command:noun>
+      <maml:description>
+        <maml:para>Deletes Intune app assignment groups from Microsoft Entra ID.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>The Remove-IntuneAppGroup function deletes the groups created by New-IntuneAppGroup.</maml:para>
+      <maml:para>With -Name, the app groups and app collection groups of those applications are found the same way as Get-IntuneAppGroup -Name does; use -Intent to delete only some of them. With -Id (or by piping the output of Get-IntuneAppGroup or New-IntuneAppGroup), the groups with those object IDs are deleted. A group whose name does not start with 'Intune-AG-' or 'Intune-ACG-' is never deleted; an error is written instead.</maml:para>
+      <maml:para>Deleted security groups cannot be restored. ConfirmImpact is High, so you are asked to confirm each group unless you use -Confirm:$false. Supports -WhatIf. Nothing is written to the pipeline.</maml:para>
+      <maml:para>Requires the Microsoft Entra PowerShell module (Microsoft.Entra or Microsoft.Entra.Groups) and a session opened with Connect-Entra that can delete groups, for example the Group.ReadWrite.All scope.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Remove-IntuneAppGroup</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="AppName">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>One or more application names whose groups are deleted. Accepts pipeline input.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Intent</maml:name>
+          <maml:description>
+            <maml:para>With -Name, delete only the groups for these intents (Available, Required, Uninstall). By default the groups for every intent are deleted.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+      <command:syntaxItem>
+        <maml:name>Remove-IntuneAppGroup</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="ObjectId, GroupId">
+          <maml:name>Id</maml:name>
+          <maml:description>
+            <maml:para>The object IDs of the groups to delete. Accepts pipeline input by property name (Id, ObjectId or GroupId), for example from Get-IntuneAppGroup.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="AppName">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>One or more application names whose groups are deleted. Accepts pipeline input.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Intent</maml:name>
+        <maml:description>
+          <maml:para>With -Name, delete only the groups for these intents (Available, Required, Uninstall). By default the groups for every intent are deleted.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="ObjectId, GroupId">
+        <maml:name>Id</maml:name>
+        <maml:description>
+          <maml:para>The object IDs of the groups to delete. Accepts pipeline input by property name (Id, ObjectId or GroupId), for example from Get-IntuneAppGroup.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>Application names.</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>Objects with an Id property, such as the output of Get-IntuneAppGroup.</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>None</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Author: Nigel Tatschner Company: TheCodeSaiyan</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Remove-IntuneAppGroup -Name 'Company Portal' -WhatIf</dev:code>
+        <dev:remarks>
+          <maml:para>Shows which Company Portal groups would be deleted.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Remove-IntuneAppGroup -Name 'Company Portal' -Intent Uninstall -Confirm:$false</dev:code>
+        <dev:remarks>
+          <maml:para>Deletes Intune-AG-CompanyPortal-Uninstall (and Intune-ACG-CompanyPortal-Uninstall) without asking.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>Get-IntuneAppGroup -All | Where-Object AppName -EQ 'OldApp' | Remove-IntuneAppGroup</dev:code>
+        <dev:remarks>
+          <maml:para>Deletes the groups returned by Get-IntuneAppGroup, asking for each one.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-IntuneAppGroup</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>New-IntuneAppGroup</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>https://learn.microsoft.com/powershell/module/microsoft.entra.groups/remove-entragroup</maml:linkText>
+        <maml:uri>https://learn.microsoft.com/powershell/module/microsoft.entra.groups/remove-entragroup</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+</helpItems>
