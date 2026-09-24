@@ -13,22 +13,39 @@ LONG DESCRIPTION
     Commands that call Microsoft Entra ID need the Microsoft Entra PowerShell
     module (Microsoft.Entra.Groups or Microsoft.Entra) and a connected session
     (Connect-Entra). It is not a RequiredModule: tcs.azure imports without it,
-    and New-IntuneAppGroup stops with install instructions when it is missing.
+    and the Entra commands stop with install instructions when it is missing,
+    or with one "run Connect-Entra" error when there is no session.
 
 COMMANDS
     Microsoft Entra ID groups
-        New-IntuneAppGroup        Creates an "Available" and a "Required"
-                                  security group for each application name
-                                  (Intune-AG-<Name>-<Intent>, or
-                                  Intune-ACG-<Name>-<Intent> with -Collection).
-                                  Existing groups are skipped with a warning.
-                                  Supports -WhatIf and -Confirm.
+        New-IntuneAppGroup        Creates a security group for each application
+                                  name and intent (Available and Required by
+                                  default, or -Intent Uninstall):
+                                  Intune-AG-<Name>-<Intent>, or
+                                  Intune-ACG-<Name>-<Intent> with -Collection.
+                                  Returns an object for each group with Status
+                                  Created, Existing, Failed or WhatIf. Accepts
+                                  names from the pipeline. Supports -WhatIf and
+                                  -Confirm.
+        Get-IntuneAppGroup        Finds the Intune app groups of an application
+                                  (-Name) or every Intune app group (-All).
+        Remove-IntuneAppGroup     Deletes Intune app groups by application name
+                                  or by -Id (for example piped from
+                                  Get-IntuneAppGroup). Asks for confirmation;
+                                  supports -WhatIf.
+        New-TcsEntraDepartmentalGroup
+                                  Creates a departmental security group named
+                                  by Get-DepartmentalGroupName, optionally with
+                                  dynamic membership
+                                  (user.department -eq "<Department>") and
+                                  owners. Supports -WhatIf and -Confirm.
 
     Naming
-        New-TcsDepartmentalGroup  Builds a standardised group name from a
+        Get-DepartmentalGroupName Builds a standardised group name from a
                                   prefix, division, optional department and
                                   optional suffix. Returns the name only; it
-                                  creates nothing.
+                                  creates nothing. New-TcsDepartmentalGroup,
+                                  its name before 0.2.0, is an alias.
 
     Run Get-Help <command> -Full for parameters and examples.
 
@@ -67,7 +84,7 @@ TELEMETRY
 EXAMPLES
     Build a departmental group name:
 
-        New-TcsDepartmentalGroup -Prefix 'SG' -Division 'Human Resources' -Department 'Payroll'
+        Get-DepartmentalGroupName -Prefix 'SG' -Division 'Human Resources' -Department 'Payroll'
 
     Preview the Intune app groups for two applications:
 
@@ -84,8 +101,11 @@ EXAMPLES
 
 SEE ALSO
     about_tcs.core
+    Get-DepartmentalGroupName
+    New-TcsEntraDepartmentalGroup
     New-IntuneAppGroup
-    New-TcsDepartmentalGroup
+    Get-IntuneAppGroup
+    Remove-IntuneAppGroup
     Get-ModuleConfig
     Set-ModuleConfig
     Invoke-TelemetryCollection

@@ -13,7 +13,7 @@
     Author               = 'Nigel Tatschner'
     CompanyName          = 'TheCodeSaiyan'
     Copyright            = '(c) 2024-2026 Nigel Tatschner. All rights reserved.'
-    Description          = 'Helper functions for Microsoft Azure and Microsoft Entra ID: naming departmental groups and creating Intune app assignment groups.'
+    Description          = 'Helper functions for Microsoft Azure and Microsoft Entra ID: naming and creating departmental groups, and managing Intune app assignment groups.'
     CompatiblePSEditions = @('Desktop', 'Core')
     PowerShellVersion    = '5.1'
     RequiredModules      = @(
