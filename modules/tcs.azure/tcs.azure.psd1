@@ -8,7 +8,7 @@
 
 @{
     RootModule           = 'tcs.azure.psm1'
-    ModuleVersion        = '0.1.0'
+    ModuleVersion        = '0.1.1'
     GUID                 = '9d6151da-f9cf-4606-a985-d3f5c463d419'
     Author               = 'Nigel Tatschner'
     CompanyName          = 'TheCodeSaiyan'
