@@ -35,6 +35,12 @@ Describe 'tcs.azure module' {
         ($Module.ExportedFunctions.Keys | Sort-Object) | Should -Be $publicFiles
     }
 
+    It 'Exports exactly the aliases listed in the manifest' {
+        $manifestAliases = @((Import-PowerShellDataFile -Path $ManifestPath).AliasesToExport | Sort-Object)
+        @($Module.ExportedAliases.Keys | Sort-Object) | Should -Be $manifestAliases
+        $Module.ExportedAliases['New-TcsDepartmentalGroup'].ResolvedCommandName | Should -Be 'Get-DepartmentalGroupName'
+    }
+
     It 'Uses tcs.azure.psm1 as the root module' {
         (Import-PowerShellDataFile -Path $ManifestPath).RootModule | Should -Be 'tcs.azure.psm1'
         $Module.ModuleType | Should -Be 'Script'

@@ -8,7 +8,7 @@
 
 @{
     RootModule           = 'tcs.azure.psm1'
-    ModuleVersion        = '0.1.1'
+    ModuleVersion        = '0.2.0'
     GUID                 = '9d6151da-f9cf-4606-a985-d3f5c463d419'
     Author               = 'Nigel Tatschner'
     CompanyName          = 'TheCodeSaiyan'
@@ -20,12 +20,12 @@
         @{ ModuleName = 'tcs.core'; ModuleVersion = '0.3.0' }
     )
     FunctionsToExport    = @(
-        'New-IntuneAppGroup',
-        'New-TcsDepartmentalGroup'
+        'Get-DepartmentalGroupName',
+        'New-IntuneAppGroup'
     )
     CmdletsToExport      = @()
     VariablesToExport    = @()
-    AliasesToExport      = @()
+    AliasesToExport      = @('New-TcsDepartmentalGroup')
     PrivateData          = @{
         PSData = @{
             Tags                       = @('Azure', 'Entra', 'EntraID', 'Intune', 'Microsoft', 'Groups', 'PSEdition_Desktop', 'PSEdition_Core', 'Windows', 'Linux', 'MacOS')

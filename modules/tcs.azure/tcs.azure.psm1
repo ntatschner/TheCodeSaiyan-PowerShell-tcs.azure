@@ -29,4 +29,5 @@ catch {
 }
 #endregion
 
-Export-ModuleMember -Function $Public.BaseName
+# Aliases are declared with [Alias()] on the public functions (for example New-TcsDepartmentalGroup)
+Export-ModuleMember -Function $Public.BaseName -Alias '*'
