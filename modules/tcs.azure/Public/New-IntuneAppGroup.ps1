@@ -1,97 +1,152 @@
 <#
 .SYNOPSIS
-Creates Intune App Groups or App Collection Groups based on the provided names.
+    Creates Intune app assignment groups ("Available" and "Required") in Microsoft Entra ID.
 
 .DESCRIPTION
-The `New-IntuneAppGroup` function creates Intune App Groups or App Collection Groups for the specified names. 
-It supports creating both "Available" and "Required" groups for each name provided. The function also includes 
-progress reporting to indicate the status of the group creation process.
+    The New-IntuneAppGroup function creates two security groups in Microsoft Entra ID for each
+    application name: one for "Available" and one for "Required" Intune assignments.
 
-.PARAMETER Collection
-A switch parameter that, when specified, indicates that App Collection Groups should be created instead of App Groups.
+    Groups are named 'Intune-AG-<Name>-<Intent>' (app groups) or 'Intune-ACG-<Name>-<Intent>' (app
+    collection groups, with -Collection). The name is converted to PascalCase with spaces removed,
+    for example 'company portal' becomes 'CompanyPortal'. The mail nickname is the group name with
+    characters that Entra ID does not allow in a mail nickname removed.
+
+    A group that already exists (same display name) is skipped with a warning. The created group objects
+    are written to the pipeline.
+
+    Requires the Microsoft Entra PowerShell module (Microsoft.Entra or Microsoft.Entra.Groups) and an
+    authenticated session (Connect-Entra) with permission to create groups, for example the
+    Group.ReadWrite.All scope. Supports -WhatIf and -Confirm.
 
 .PARAMETER Name
-An array of strings representing the names for which the Intune groups should be created. Each name will have both 
-"Available" and "Required" groups created.
+    One or more application names. Two groups ("Available" and "Required") are created for each name.
+
+.PARAMETER Collection
+    Create app collection groups ('Intune-ACG-...') instead of app groups ('Intune-AG-...').
+
+.INPUTS
+    None
+    This function does not accept pipeline input.
+
+.OUTPUTS
+    System.Object
+    The group objects returned by New-EntraGroup.
 
 .EXAMPLE
-PS> New-IntuneAppGroup -Name "App1", "App2"
+    New-IntuneAppGroup -Name 'App1', 'App2'
 
-Creates Intune App Groups for "App1" and "App2" with both "Available" and "Required" groups.
-
-Output:
-Creating Intune Groups
-Processing App1 (Available)
-Group "Intune-AG-App1-Available" created.
-Processing App1 (Required)
-Group "Intune-AG-App1-Required" created.
-Processing App2 (Available)
-Group "Intune-AG-App2-Available" created.
-Processing App2 (Required)
-Group "Intune-AG-App2-Required" created.
+    Creates Intune-AG-App1-Available, Intune-AG-App1-Required, Intune-AG-App2-Available and
+    Intune-AG-App2-Required.
 
 .EXAMPLE
-PS> New-IntuneAppGroup -Collection -Name "App1", "App2"
+    New-IntuneAppGroup -Collection -Name 'office apps' -WhatIf
 
-Creates Intune App Collection Groups for "App1" and "App2" with both "Available" and "Required" groups.
-
-Output:
-Creating Intune Groups
-Processing App1 (Available)
-Group "Intune-ACG-App1-Available" created.
-Processing App1 (Required)
-Group "Intune-ACG-App1-Required" created.
-Processing App2 (Available)
-Group "Intune-ACG-App2-Available" created.
-Processing App2 (Required)
-Group "Intune-ACG-App2-Required" created.
+    Shows that Intune-ACG-OfficeApps-Available and Intune-ACG-OfficeApps-Required would be created,
+    without creating them.
 
 .NOTES
-The function uses the `Get-EntraGroup` and `New-EntraGroup` cmdlets to interact with Azure AD groups. 
-Ensure you have the necessary permissions to create groups in Azure AD.
+    Author: Nigel Tatschner
+    Company: TheCodeSaiyan
 
+.LINK
+    https://learn.microsoft.com/powershell/module/microsoft.entra.groups/new-entragroup
 #>
 function New-IntuneAppGroup {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    [OutputType([object])]
     param(
-        [switch]
-        $Collection,
-
+        [Parameter(Mandatory = $true, Position = 0)]
+        [ValidateNotNullOrEmpty()]
         [string[]]
-        $Name
+        $Name,
+
+        [switch]
+        $Collection
     )
-    begin {
-        $totalIterations = $Name.Count * 2
-        $currentIteration = 0
+
+    $TelemetryArgs = @{
+        ModuleName    = $MyInvocation.MyCommand.Module.Name
+        ModuleVersion = [string]$MyInvocation.MyCommand.Module.Version
+        CommandName   = $MyInvocation.MyCommand.Name
+        ExecutionID   = [guid]::NewGuid().ToString()
     }
-    process {
-        foreach ($a in $Name) {
-            $a = $($a -split " " | ForEach-Object { $_.Substring(0, 1).ToUpper() + $_.Substring(1) }) -join ''
-            $Description = "Intune $(if ($Collection) { "App Collection Group" } else { "App Group" }) for `"$a`", this is an"
-            foreach ($i in ("Available", "Required")) {
+    Invoke-TelemetryCollection @TelemetryArgs -Stage Start -ClearTimer
+
+    $missingCommands = @('Get-EntraGroup', 'New-EntraGroup' | Where-Object { -not (Get-Command -Name $_ -ErrorAction SilentlyContinue) })
+    if ($missingCommands.Count -gt 0) {
+        $exception = [System.Management.Automation.CommandNotFoundException]::new(
+            "New-IntuneAppGroup needs $($missingCommands -join ' and ') from the Microsoft Entra PowerShell module. " +
+            "Install it with 'Install-Module Microsoft.Entra.Groups -Scope CurrentUser' (or 'Microsoft.Entra'), then run 'Connect-Entra -Scopes Group.ReadWrite.All'.")
+        $errorRecord = [System.Management.Automation.ErrorRecord]::new($exception, 'EntraModuleNotFound', [System.Management.Automation.ErrorCategory]::ObjectNotFound, $null)
+        Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $errorRecord
+        $PSCmdlet.ThrowTerminatingError($errorRecord)
+    }
+
+    $groupType = if ($Collection) { 'ACG' } else { 'AG' }
+    $groupKind = if ($Collection) { 'App Collection Group' } else { 'App Group' }
+    $totalIterations = $Name.Count * 2
+    $currentIteration = 0
+    $lastError = $null
+
+    try {
+        foreach ($appName in $Name) {
+            $words = @($appName -split '\s+' | Where-Object { $_ })
+            $appName = ($words | ForEach-Object { $_.Substring(0, 1).ToUpper() + $_.Substring(1) }) -join ''
+            if (-not $appName) {
+                $currentIteration += 2
+                Write-Error -Message 'An application name cannot be blank or whitespace only.' -Category InvalidArgument -ErrorId 'BlankName'
+                continue
+            }
+            $description = "Intune $groupKind for `"$appName`", this is an"
+
+            foreach ($intent in @('Available', 'Required')) {
                 $currentIteration++
-                $percentComplete = ($currentIteration / $totalIterations) * 100
-                Write-Progress -Activity "Creating Intune Groups" -Status "Processing $a ($i)" -PercentComplete $percentComplete
-                $Params = @{
-                    MailNickname = "Intune-$(if ($Collection) {"ACG"} else {"AG"})-$a-$i"
-                    DisplayName  = "Intune-$(if ($Collection) {"ACG"} else {"AG"})-$a-$i"
-                    Description  = "$Description $i install."
-                }
-                Write-Verbose "Creating Intune group `"$($Params.DisplayName)`""
-                try {
-                    if (Get-EntraGroup -Filter "DisplayName eq '$($Params.DisplayName)'") {
-                        Write-Warning "Group `"$($Params.DisplayName)`" already exists"
-                    }
-                    else {
-                        New-EntraGroup @Params -MailEnabled $false -SecurityEnabled $true -ErrorAction Stop
-                        Write-Verbose "Group `"$($Params.DisplayName)`" created."
-                    }
-                }
-                catch {
-                    Write-Error $_
+                Write-Progress -Activity 'Creating Intune Groups' -Status "Processing $appName ($intent)" -PercentComplete (($currentIteration / $totalIterations) * 100)
+
+                $displayName = "Intune-$groupType-$appName-$intent"
+                if (-not $PSCmdlet.ShouldProcess($displayName, 'Create Entra ID security group')) {
                     continue
                 }
+
+                try {
+                    # Single quotes are doubled so the name is a valid OData string literal
+                    $filter = "DisplayName eq '$($displayName -replace "'", "''")'"
+                    if (Get-EntraGroup -Filter $filter -ErrorAction Stop) {
+                        Write-Warning "Group `"$displayName`" already exists."
+                        continue
+                    }
+
+                    $groupParams = @{
+                        DisplayName     = $displayName
+                        # Entra ID mail nicknames cannot contain spaces, non-ASCII characters or @ ( ) \ [ ] " ; : < > ,
+                        MailNickname    = $displayName -replace '[^\x21-\x7E]|[@()\\\[\]";:<>,]', ''
+                        Description     = "$description $intent install."
+                        MailEnabled     = $false
+                        SecurityEnabled = $true
+                    }
+                    Write-Verbose "Creating Intune group `"$displayName`""
+                    New-EntraGroup @groupParams -ErrorAction Stop
+                    Write-Verbose "Group `"$displayName`" created."
+                }
+                catch {
+                    $lastError = $_
+                    Write-Error -ErrorRecord $_
+                }
             }
+        }
+    }
+    catch {
+        # Reached when the caller asked for errors to stop (-ErrorAction Stop)
+        $lastError = $_
+        throw
+    }
+    finally {
+        Write-Progress -Activity 'Creating Intune Groups' -Completed
+        if ($lastError) {
+            Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
+        }
+        else {
+            Invoke-TelemetryCollection @TelemetryArgs -Stage End
         }
     }
 }

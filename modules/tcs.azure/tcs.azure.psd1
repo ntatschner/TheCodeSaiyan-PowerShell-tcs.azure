@@ -7,52 +7,32 @@
 #
 
 @{
-
-# Script module or binary module file associated with this manifest.
-# RootModule = ''
-
-# Version number of this module.
-ModuleVersion = '0.0.1'
-
-GUID = '9d6151da-f9cf-4606-a985-d3f5c463d419'
-
-Author = 'Nigel Tatschner'
-
-CompanyName = 'Rothesay'
-
-Copyright = '(c) 2024 Nigel Tatschner. All rights reserved.'
-
-Description = 'Helper Functions for Microsoft Azure'
-
-PowerShellVersion = '5.1'
-
-RequiredModules = @('tcs.core')
-
-NestedModules = @('tcs.azure.psm1')
-
-FunctionsToExport = @(
-    'New-IntuneAppGroup',
-    'New-TcsDepartmentalGroup'
-)
-
-CmdletsToExport = @()
-
-VariablesToExport = @()
-
-AliasesToExport = @()
-
-PrivateData = @{
-
-    PSData = @{
-
-        Tags = @("azure", "intune", "microsoft", "groups")
-
-        ReleaseNotes = 'Adding helper functions for Intune App Groups.'
-
-        ExternalModuleDependencies = @('Microsoft.Graph.Entra')
-
+    RootModule           = 'tcs.azure.psm1'
+    ModuleVersion        = '0.1.0'
+    GUID                 = '9d6151da-f9cf-4606-a985-d3f5c463d419'
+    Author               = 'Nigel Tatschner'
+    CompanyName          = 'TheCodeSaiyan'
+    Copyright            = '(c) 2024-2026 Nigel Tatschner. All rights reserved.'
+    Description          = 'Helper functions for Microsoft Azure and Microsoft Entra ID: naming departmental groups and creating Intune app assignment groups.'
+    CompatiblePSEditions = @('Desktop', 'Core')
+    PowerShellVersion    = '5.1'
+    RequiredModules      = @(
+        @{ ModuleName = 'tcs.core'; ModuleVersion = '0.3.0' }
+    )
+    FunctionsToExport    = @(
+        'New-IntuneAppGroup',
+        'New-TcsDepartmentalGroup'
+    )
+    CmdletsToExport      = @()
+    VariablesToExport    = @()
+    AliasesToExport      = @()
+    PrivateData          = @{
+        PSData = @{
+            Tags                       = @('Azure', 'Entra', 'EntraID', 'Intune', 'Microsoft', 'Groups', 'PSEdition_Desktop', 'PSEdition_Core', 'Windows', 'Linux', 'MacOS')
+            ProjectUri                 = 'https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure'
+            ReleaseNotes               = 'https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure/blob/main/CHANGELOG.md'
+            # New-IntuneAppGroup needs the Microsoft Entra PowerShell groups module at run time
+            ExternalModuleDependencies = @('Microsoft.Entra.Groups')
+        }
     }
-
-}
-
 }
