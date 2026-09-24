@@ -91,7 +91,7 @@ jobs:
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           # RequiredModules of tcs.azure. The Microsoft Entra cmdlets are stubbed and mocked in the tests.
-          Install-Module tcs.core -MinimumVersion 0.3.0 -Force -Scope CurrentUser
+          ./.github/scripts/install-tcs-core.ps1 -MinimumVersion 0.3.0
           Install-Module Pester -RequiredVersion $env:PESTER_VERSION -Force -SkipPublisherCheck -Scope CurrentUser
           Install-Module PSScriptAnalyzer -RequiredVersion $env:PSSA_VERSION -Force -Scope CurrentUser
 
