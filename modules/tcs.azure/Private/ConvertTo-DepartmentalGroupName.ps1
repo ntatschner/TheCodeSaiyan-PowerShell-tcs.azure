@@ -56,14 +56,14 @@ function ConvertTo-DepartmentalGroupName {
         $current = New-Object -TypeName 'System.Collections.Generic.List[string]'
         foreach ($token in @($clean -split '\s+' | Where-Object { $_ })) {
             $word = ($token -replace '-{2,}', '-').Trim('-')
-            if ($token.StartsWith('-') -and $current.Count -gt 0) {
+            if ($token.StartsWith('-', [System.StringComparison]::Ordinal) -and $current.Count -gt 0) {
                 $segments.Add($current.ToArray())
                 $current.Clear()
             }
             if ($word) {
                 $current.Add($word)
             }
-            if ($token.EndsWith('-') -and $current.Count -gt 0) {
+            if ($token.EndsWith('-', [System.StringComparison]::Ordinal) -and $current.Count -gt 0) {
                 $segments.Add($current.ToArray())
                 $current.Clear()
             }
