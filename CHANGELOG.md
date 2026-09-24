@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-24
+
+### Fixed
+- Restored the hand-written `about_tcs.azure` help topic. The shared docs workflow had replaced it with the PlatyPS placeholder.
+- Reworded a changelog entry that used a name from another organisation.
+
 ## [0.1.0] - 2026-09-24
 
 Requires tcs.core 0.3.0 or later.
@@ -35,7 +41,7 @@ Requires tcs.core 0.3.0 or later.
   `docs/`) and `publish-to-psgallery.yml`; `.github/PUBLISHING.md` describes the release steps.
 
 ### Fixed
-- `New-TcsDepartmentalGroup` was never exported: its file defined `New-DepartmentalGroup`.
+- `New-TcsDepartmentalGroup` was never exported: its file defined the function under a different name.
 - `New-TcsDepartmentalGroup`: `[CmdletBinding()]` was inside `param()`; `ValidateScript(ErrorMessage = ...)`
   does not exist in Windows PowerShell 5.1 and its `'^\s$'` check never rejected names with spaces;
   repeated or trailing spaces in the division caused a `Substring` exception.
