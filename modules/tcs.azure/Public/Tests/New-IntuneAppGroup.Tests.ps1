@@ -138,4 +138,12 @@ Describe 'New-IntuneAppGroup without the Microsoft Entra module' {
         Mock -ModuleName tcs.azure Get-Command { } -ParameterFilter { $Name -in 'Get-EntraGroup', 'New-EntraGroup' }
         { New-IntuneAppGroup -Name 'App1' -Confirm:$false } | Should -Throw '*Install-Module Microsoft.Entra.Groups*'
     }
+
+    It 'Records failed end telemetry when the Entra commands are missing' {
+        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.azure Get-Command { } -ParameterFilter { $Name -in 'Get-EntraGroup', 'New-EntraGroup' }
+        { New-IntuneAppGroup -Name 'App1' -Confirm:$false } | Should -Throw
+        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+    }
 }
