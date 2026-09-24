@@ -34,8 +34,10 @@ try {
     $group = New-TcsDepartmentalGroup -Prefix 'SG' -Division 'IT'
     if ($group -ne 'SG-IT') { throw "New-TcsDepartmentalGroup returned '$group' (expected 'SG-IT')." }
 
-    $intune = Get-Command -Name New-IntuneAppGroup -ErrorAction Stop
-    if (-not $intune.Parameters.ContainsKey('WhatIf')) { throw 'New-IntuneAppGroup does not support -WhatIf.' }
+    foreach ($commandName in 'New-IntuneAppGroup', 'Remove-IntuneAppGroup', 'New-TcsEntraDepartmentalGroup') {
+        $command = Get-Command -Name $commandName -ErrorAction Stop
+        if (-not $command.Parameters.ContainsKey('WhatIf')) { throw "$commandName does not support -WhatIf." }
+    }
 
     $exported = @((Get-Module $moduleName).ExportedFunctions.Keys)
     $expected = @((Import-PowerShellDataFile -Path $moduleManifest).FunctionsToExport)

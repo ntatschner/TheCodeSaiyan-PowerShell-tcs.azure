@@ -21,7 +21,10 @@
     )
     FunctionsToExport    = @(
         'Get-DepartmentalGroupName',
-        'New-IntuneAppGroup'
+        'Get-IntuneAppGroup',
+        'New-IntuneAppGroup',
+        'New-TcsEntraDepartmentalGroup',
+        'Remove-IntuneAppGroup'
     )
     CmdletsToExport      = @()
     VariablesToExport    = @()
