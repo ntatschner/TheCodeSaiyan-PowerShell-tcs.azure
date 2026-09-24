@@ -51,7 +51,7 @@ Install-Module -Name Microsoft.Entra.Groups -Scope CurrentUser
   Casing is culture-invariant.
 - A stand-alone hyphen separates parts (`Accounts Payable - UK` -> `AccountsPayable-UK`); stray
   hyphens and repeated parts are dropped (`HR -` -> `HR`).
-- With a department, the division becomes its initials (all-caps words kept whole; `and`, `of`,
+- With a department, the division becomes its initials (all-caps words of 2-4 characters kept whole; `and`, `of`,
   `the`, `&` skipped) and a leading repeat of the division in the department is removed.
 - A division with no letters or digits left (for example `,` or `&`) is rejected with an error.
 

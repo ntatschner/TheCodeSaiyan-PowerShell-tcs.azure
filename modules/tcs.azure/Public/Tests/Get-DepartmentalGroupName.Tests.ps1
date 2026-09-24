@@ -69,6 +69,8 @@ Describe 'Get-DepartmentalGroupName' {
             @{ Division = 'Finance'; Department = 'Accounts Payable - UK'; Expected = 'SG-F-AccountsPayable-UK' }
             @{ Division = 'Finance'; Department = 'Payroll (UK/IE)'; Expected = 'SG-F-PayrollUKIE' }
             @{ Division = 'Finance'; Department = ','; Expected = 'SG-Finance' }
+            @{ Division = 'FINANCE'; Department = 'Payroll'; Expected = 'SG-F-Payroll' }
+            @{ Division = 'NHS Trust'; Department = 'Estates'; Expected = 'SG-NHST-Estates' }
         ) {
             Get-DepartmentalGroupName -Prefix 'SG' -Division $Division -Department $Department | Should -BeExactly $Expected
         }

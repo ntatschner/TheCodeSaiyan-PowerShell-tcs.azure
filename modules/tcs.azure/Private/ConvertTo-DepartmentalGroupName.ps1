@@ -91,9 +91,10 @@ function ConvertTo-DepartmentalGroupName {
     }
 
     if ($departmentSegments.Count -gt 0) {
-        # Initials of the division: all-caps words (acronyms such as IT) are kept whole, stop words are skipped
+        # Initials of the division: short all-caps words (acronyms such as IT or HR, 2 to 4 characters)
+        # are kept whole, stop words are skipped
         $initials = -join @(foreach ($word in $meaningfulWords) {
-                if ($word.Length -gt 1 -and $word -cmatch '^[\p{Lu}\p{Nd}]+$' -and $word -cmatch '\p{Lu}') {
+                if ($word.Length -ge 2 -and $word.Length -le 4 -and $word -cmatch '^[\p{Lu}\p{Nd}]+$' -and $word -cmatch '\p{Lu}') {
                     $word
                 }
                 else {

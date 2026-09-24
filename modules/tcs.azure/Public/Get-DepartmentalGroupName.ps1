@@ -20,8 +20,9 @@
         hyphens and empty parts are dropped ('HR -' -> 'HR').
       - Without a department, the division is used in full ('SG-HumanResources').
       - With a department, the division is abbreviated to the initials of its words and the department
-        is written in PascalCase ('SG-HR-Payroll'). All-caps words are kept whole in the initials
-        ('IT Services' -> 'ITS'), and the words and, of, the and & are skipped ('Sales & Marketing' -> 'SM').
+        is written in PascalCase ('SG-HR-Payroll'). All-caps words of 2 to 4 characters (acronyms) are
+        kept whole in the initials ('IT Services' -> 'ITS'), and the words and, of, the and & are
+        skipped ('Sales & Marketing' -> 'SM').
         Leading parts of the department that repeat the initials or the division ('HR - Payroll') are removed.
       - A part that repeats the part before it is not added twice ('HR' with department 'HR' -> 'SG-HR').
       - A division with no letters or digits left after clean-up (for example ',' or '&') is rejected

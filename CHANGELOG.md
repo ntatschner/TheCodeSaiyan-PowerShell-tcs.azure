@@ -17,7 +17,7 @@ Requires tcs.core 0.3.0 or later.
 - Departmental names changed for some input: all-caps words are kept (`IT` gives `SG-IT`, was
   `SG-It`), the rest of a word is no longer lower-cased (`FINANCE` stays `FINANCE`), stop words
   (and, of, the, &) are skipped in initials (`Sales & Marketing` gives `SM`, was `SAM`),
-  acronyms are kept whole in initials (`IT Services` gives `ITS`), characters such as `( ) / \ .`
+  acronyms (all-caps words of 2-4 characters) are kept whole in initials (`IT Services` gives `ITS`), characters such as `( ) / \ .`
   are removed and stand-alone hyphens now separate parts (`Accounts Payable - UK` gives
   `AccountsPayable-UK`, was `AccountsPayable-Uk`).
 - `New-IntuneAppGroup` now returns a `Tcs.Azure.IntuneAppGroup` object for every group (Name, Id,
