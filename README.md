@@ -101,3 +101,7 @@ Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 **Nigel Tatschner** - TheCodeSaiyan
 - GitHub: [@ntatschner](https://github.com/ntatschner)
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.

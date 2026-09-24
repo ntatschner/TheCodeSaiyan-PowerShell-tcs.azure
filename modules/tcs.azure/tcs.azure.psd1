@@ -30,6 +30,7 @@
         PSData = @{
             Tags                       = @('Azure', 'Entra', 'EntraID', 'Intune', 'Microsoft', 'Groups', 'PSEdition_Desktop', 'PSEdition_Core', 'Windows', 'Linux', 'MacOS')
             ProjectUri                 = 'https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure'
+            LicenseUri                 = 'https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure/blob/main/LICENSE'
             ReleaseNotes               = 'https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure/blob/main/CHANGELOG.md'
             # New-IntuneAppGroup needs the Microsoft Entra PowerShell groups module at run time
             ExternalModuleDependencies = @('Microsoft.Entra.Groups')
