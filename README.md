@@ -11,10 +11,14 @@ names and Intune app assignment groups. Part of the TheCodeSaiyan PowerShell sui
 - Windows PowerShell 5.1 or PowerShell 7 on Windows, Linux or macOS
 - [tcs.core](https://www.powershellgallery.com/packages/tcs.core) **0.3.0 or later** (declared in
   `RequiredModules`; install it first when importing from source)
-- For `New-IntuneAppGroup` only: the Microsoft Entra PowerShell module
+- For the Entra commands (`New-IntuneAppGroup`, `Get-IntuneAppGroup`, `Remove-IntuneAppGroup`,
+  `New-TcsEntraDepartmentalGroup`): the Microsoft Entra PowerShell module
   (`Microsoft.Entra.Groups` or the full `Microsoft.Entra`) and a session opened with
-  `Connect-Entra` that is allowed to create groups (for example `Group.ReadWrite.All`).
-  It is not installed automatically; the command tells you if it is missing.
+  `Connect-Entra` that is allowed to manage groups (for example `Group.ReadWrite.All`).
+  It is not installed automatically; the commands tell you if it is missing or not connected.
+  `New-TcsEntraDepartmentalGroup -DynamicMembership` also needs `Microsoft.Entra.Beta.Groups`
+  (for `New-EntraBetaGroup`) while `New-EntraGroup` has no `-MembershipRule` parameter, and a
+  Microsoft Entra ID P1 licence.
 
 ## Installation
 
@@ -25,7 +29,7 @@ Install-Module -Name tcs.core -MinimumVersion 0.3.0 -Scope CurrentUser
 git clone https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure.git
 Import-Module ./TheCodeSaiyan-PowerShell-tcs.azure/modules/tcs.azure/tcs.azure.psd1
 
-# Only needed for New-IntuneAppGroup
+# Only needed for the Entra commands
 Install-Module -Name Microsoft.Entra.Groups -Scope CurrentUser
 ```
 
@@ -33,22 +37,44 @@ Install-Module -Name Microsoft.Entra.Groups -Scope CurrentUser
 
 | Function | Purpose |
 | --- | --- |
-| `New-TcsDepartmentalGroup` | Builds a standard group name such as `SG-HR-Payroll-Users` from a prefix, division, department and suffix. Returns a string; creates nothing. |
-| `New-IntuneAppGroup` | Creates `Intune-AG-<App>-Available` / `-Required` (or `Intune-ACG-...` with `-Collection`) security groups in Entra ID. Skips groups that already exist. Supports `-WhatIf` and `-Confirm`. |
+| `Get-DepartmentalGroupName` | Builds a standard group name such as `SG-HR-Payroll-Users` from a prefix, division, department and suffix. Returns a string; creates nothing. Accepts pipeline input by property name (for example from `Import-Csv`). Alias: `New-TcsDepartmentalGroup` (its name before 0.2.0). |
+| `New-TcsEntraDepartmentalGroup` | Creates the security group named by `Get-DepartmentalGroupName` in Entra ID, optionally with dynamic membership (`user.department -eq "<Department>"`) and owners. Returns existing groups instead of creating them again. Supports `-WhatIf` and `-Confirm`. |
+| `New-IntuneAppGroup` | Creates `Intune-AG-<App>-<Intent>` (or `Intune-ACG-...` with `-Collection`) security groups in Entra ID for the intents Available and Required (default) and/or Uninstall (`-Intent`). Returns an object for every group with `Status` Created, Existing, Failed or WhatIf. Accepts app names from the pipeline. Supports `-WhatIf` and `-Confirm`. |
+| `Get-IntuneAppGroup` | Finds the Intune app groups of an application (`-Name`) or all of them (`-All`). |
+| `Remove-IntuneAppGroup` | Deletes Intune app groups by application name (optionally `-Intent`) or by `-Id` / pipeline from `Get-IntuneAppGroup`. Asks for confirmation (`ConfirmImpact` High); supports `-WhatIf`. |
+
+### Naming rules for departmental groups
+
+- `&` is read as "and"; apostrophes are removed; other characters that are not letters, digits,
+  spaces or hyphens (for example `, ( ) / \ .`) are treated as spaces.
+- Words are joined in PascalCase; the rest of each word is kept, so acronyms stay (`IT` -> `IT`).
+  Casing is culture-invariant.
+- A stand-alone hyphen separates parts (`Accounts Payable - UK` -> `AccountsPayable-UK`); stray
+  hyphens and repeated parts are dropped (`HR -` -> `HR`).
+- With a department, the division becomes its initials (all-caps words of 2-4 characters kept whole; `and`, `of`,
+  `the`, `&` skipped) and a leading repeat of the division in the department is removed.
+- A division with no letters or digits left (for example `,` or `&`) is rejected with an error.
 
 ### Examples
 
 ```powershell
-New-TcsDepartmentalGroup -Prefix SG -Division 'Human Resources'
+Get-DepartmentalGroupName -Prefix SG -Division 'Human Resources'
 # SG-HumanResources
 
-New-TcsDepartmentalGroup -Prefix SG -Division 'Human Resources' -Department 'HR - Payroll & Benefits' -Suffix Users
+Get-DepartmentalGroupName -Prefix SG -Division 'Human Resources' -Department 'HR - Payroll & Benefits' -Suffix Users
 # SG-HR-PayrollAndBenefits-Users
+
+Import-Csv .\departments.csv | Get-DepartmentalGroupName -Prefix SG
 
 Connect-Entra -Scopes Group.ReadWrite.All
 New-IntuneAppGroup -Name 'Company Portal', '7-Zip' -WhatIf     # preview
 New-IntuneAppGroup -Name 'Company Portal', '7-Zip'             # create four groups
 New-IntuneAppGroup -Name 'Office Apps' -Collection             # Intune-ACG-OfficeApps-*
+'Company Portal' | New-IntuneAppGroup -Intent Uninstall        # Intune-AG-CompanyPortal-Uninstall
+Get-IntuneAppGroup -All | Group-Object AppName
+Remove-IntuneAppGroup -Name 'Old App' -WhatIf
+
+New-TcsEntraDepartmentalGroup -Prefix SG -Division Finance -Department 'Accounts Payable' -DynamicMembership -WhatIf
 ```
 
 Run `Get-Help <function> -Full` for all parameters.

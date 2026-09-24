@@ -8,24 +8,27 @@
 
 @{
     RootModule           = 'tcs.azure.psm1'
-    ModuleVersion        = '0.1.1'
+    ModuleVersion        = '0.2.0'
     GUID                 = '9d6151da-f9cf-4606-a985-d3f5c463d419'
     Author               = 'Nigel Tatschner'
     CompanyName          = 'TheCodeSaiyan'
     Copyright            = '(c) 2024-2026 Nigel Tatschner. All rights reserved.'
-    Description          = 'Helper functions for Microsoft Azure and Microsoft Entra ID: naming departmental groups and creating Intune app assignment groups.'
+    Description          = 'Helper functions for Microsoft Azure and Microsoft Entra ID: naming and creating departmental groups, and managing Intune app assignment groups.'
     CompatiblePSEditions = @('Desktop', 'Core')
     PowerShellVersion    = '5.1'
     RequiredModules      = @(
         @{ ModuleName = 'tcs.core'; ModuleVersion = '0.3.0' }
     )
     FunctionsToExport    = @(
+        'Get-DepartmentalGroupName',
+        'Get-IntuneAppGroup',
         'New-IntuneAppGroup',
-        'New-TcsDepartmentalGroup'
+        'New-TcsEntraDepartmentalGroup',
+        'Remove-IntuneAppGroup'
     )
     CmdletsToExport      = @()
     VariablesToExport    = @()
-    AliasesToExport      = @()
+    AliasesToExport      = @('New-TcsDepartmentalGroup')
     PrivateData          = @{
         PSData = @{
             Tags                       = @('Azure', 'Entra', 'EntraID', 'Intune', 'Microsoft', 'Groups', 'PSEdition_Desktop', 'PSEdition_Core', 'Windows', 'Linux', 'MacOS')

@@ -24,20 +24,32 @@ try {
         throw 'Importing the module wrote Config.psd1 into the module folder.'
     }
 
-    $group = New-TcsDepartmentalGroup -Prefix 'SG' -Division 'Human Resources' -Department 'HR - Payroll' -Suffix 'Users'
-    if ($group -ne 'SG-HR-Payroll-Users') { throw "New-TcsDepartmentalGroup returned '$group' (expected 'SG-HR-Payroll-Users')." }
+    $group = Get-DepartmentalGroupName -Prefix 'SG' -Division 'Human Resources' -Department 'HR - Payroll' -Suffix 'Users'
+    if ($group -ne 'SG-HR-Payroll-Users') { throw "Get-DepartmentalGroupName returned '$group' (expected 'SG-HR-Payroll-Users')." }
 
-    $group = New-TcsDepartmentalGroup -Prefix 'SG' -Division 'Sales & Marketing'
-    if ($group -ne 'SG-SalesAndMarketing') { throw "New-TcsDepartmentalGroup returned '$group' (expected 'SG-SalesAndMarketing')." }
+    $group = Get-DepartmentalGroupName -Prefix 'SG' -Division 'Sales & Marketing'
+    if ($group -ne 'SG-SalesAndMarketing') { throw "Get-DepartmentalGroupName returned '$group' (expected 'SG-SalesAndMarketing')." }
 
-    $intune = Get-Command -Name New-IntuneAppGroup -ErrorAction Stop
-    if (-not $intune.Parameters.ContainsKey('WhatIf')) { throw 'New-IntuneAppGroup does not support -WhatIf.' }
+    # The pre-0.2.0 name is kept as an alias
+    $group = New-TcsDepartmentalGroup -Prefix 'SG' -Division 'IT'
+    if ($group -ne 'SG-IT') { throw "New-TcsDepartmentalGroup returned '$group' (expected 'SG-IT')." }
+
+    foreach ($commandName in 'New-IntuneAppGroup', 'Remove-IntuneAppGroup', 'New-TcsEntraDepartmentalGroup') {
+        $command = Get-Command -Name $commandName -ErrorAction Stop
+        if (-not $command.Parameters.ContainsKey('WhatIf')) { throw "$commandName does not support -WhatIf." }
+    }
 
     $exported = @((Get-Module $moduleName).ExportedFunctions.Keys)
     $expected = @((Import-PowerShellDataFile -Path $moduleManifest).FunctionsToExport)
     $missing = $expected | Where-Object { $_ -notin $exported }
     if ($missing -or $exported.Count -ne $expected.Count) {
         throw "Exported functions do not match the manifest. Expected $($expected.Count), got $($exported.Count): $($exported -join ', ')"
+    }
+
+    $exportedAliases = @((Get-Module $moduleName).ExportedAliases.Keys)
+    $expectedAliases = @((Import-PowerShellDataFile -Path $moduleManifest).AliasesToExport)
+    if (Compare-Object -ReferenceObject $expectedAliases -DifferenceObject $exportedAliases) {
+        throw "Exported aliases do not match the manifest: $($exportedAliases -join ', ')"
     }
 
     Write-Host 'All smoke tests passed successfully.' -ForegroundColor Green
