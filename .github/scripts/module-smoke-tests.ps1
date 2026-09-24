@@ -1,3 +1,4 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'CI smoke test: progress is written to the job log.')]
 param()
 
 $moduleName = 'tcs.azure'

@@ -27,6 +27,12 @@ Requires tcs.core 0.3.0 or later.
   with install instructions when the Microsoft Entra module is missing.
 - Comment-based help for `New-TcsDepartmentalGroup`.
 - README, CONTRIBUTING, SECURITY, editor/git settings, CODEOWNERS, Dependabot, issue and PR templates.
+- `New-TcsDepartmentalGroup` records start/end usage telemetry through tcs.core (every exported
+  command now does); a module test fails if an exported command does not send Start and End telemetry.
+- `about_tcs.azure` help topic (`Get-Help about_tcs.azure`).
+- Release workflows calling the shared tcs workflows: `create-version-tag.yml` (tags `v<ModuleVersion>`
+  when the manifest version increases), `generate-docs.yml` (PlatyPS markdown and external help in
+  `docs/`) and `publish-to-psgallery.yml`; `.github/PUBLISHING.md` describes the release steps.
 
 ### Fixed
 - `New-TcsDepartmentalGroup` was never exported: its file defined `New-DepartmentalGroup`.
@@ -44,6 +50,7 @@ Requires tcs.core 0.3.0 or later.
 
 ### Changed
 - PSScriptAnalyzer settings aligned with tcs.core.
+- CI workflow renamed to `CI Validate` so the tag and docs workflows can run after it.
 
 ## Earlier unreleased changes (shipped in 0.1.0)
 

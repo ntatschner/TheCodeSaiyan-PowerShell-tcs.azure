@@ -73,31 +73,46 @@ function New-TcsDepartmentalGroup {
         $Department
     )
 
-    # Upper-case the first letter of each word, lower-case the rest, and join the words together.
-    # Words are split on any run of whitespace so repeated or trailing spaces cannot produce empty words.
-    $ToPascalCase = {
-        param([string]$Text)
-        $words = @($Text -split '\s+' | Where-Object { $_ })
-        ($words | ForEach-Object { $_.Substring(0, 1).ToUpper() + $_.Substring(1).ToLower() }) -join ''
+    $TelemetryArgs = @{
+        ModuleName    = $MyInvocation.MyCommand.Module.Name
+        ModuleVersion = [string]$MyInvocation.MyCommand.Module.Version
+        CommandName   = $MyInvocation.MyCommand.Name
+        ExecutionID   = [guid]::NewGuid().ToString()
     }
+    Invoke-TelemetryCollection @TelemetryArgs -Stage Start -ClearTimer
 
-    $Division = ($Division -replace '&', 'and') -replace ',', ''
-    $parts = @($Prefix)
+    try {
+        # Upper-case the first letter of each word, lower-case the rest, and join the words together.
+        # Words are split on any run of whitespace so repeated or trailing spaces cannot produce empty words.
+        $ToPascalCase = {
+            param([string]$Text)
+            $words = @($Text -split '\s+' | Where-Object { $_ })
+            ($words | ForEach-Object { $_.Substring(0, 1).ToUpper() + $_.Substring(1).ToLower() }) -join ''
+        }
 
-    if (-not [string]::IsNullOrWhiteSpace($Department)) {
-        $Department = $Department -replace '&', 'and'
-        $initials = (@($Division -split '\s+' | Where-Object { $_ }) | ForEach-Object { $_.Substring(0, 1).ToUpper() }) -join ''
-        $Department = $Department -replace ('^\s*' + [regex]::Escape($initials) + '\s*-'), ''
-        $parts += $initials
-        $parts += & $ToPascalCase $Department
+        $Division = ($Division -replace '&', 'and') -replace ',', ''
+        $parts = @($Prefix)
+
+        if (-not [string]::IsNullOrWhiteSpace($Department)) {
+            $Department = $Department -replace '&', 'and'
+            $initials = (@($Division -split '\s+' | Where-Object { $_ }) | ForEach-Object { $_.Substring(0, 1).ToUpper() }) -join ''
+            $Department = $Department -replace ('^\s*' + [regex]::Escape($initials) + '\s*-'), ''
+            $parts += $initials
+            $parts += & $ToPascalCase $Department
+        }
+        else {
+            $parts += & $ToPascalCase $Division
+        }
+
+        if ($Suffix) {
+            $parts += $Suffix
+        }
+
+        $parts -join '-'
+        Invoke-TelemetryCollection @TelemetryArgs -Stage End
     }
-    else {
-        $parts += & $ToPascalCase $Division
+    catch {
+        Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $_
+        throw
     }
-
-    if ($Suffix) {
-        $parts += $Suffix
-    }
-
-    $parts -join '-'
 }
