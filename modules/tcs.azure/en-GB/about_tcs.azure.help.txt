@@ -1,52 +1,99 @@
-﻿TOPIC
+TOPIC
     about_tcs.azure
 
-    ABOUT TOPIC NOTE:
-    The first header of the about topic should be the topic name.
-    The second header contains the lookup name used by the help system.
-    
-    IE:
-    # Some Help Topic Name
-    ## SomeHelpTopicFileName
-    
-    This will be transformed into the text file
-    as `about_SomeHelpTopicFileName`.
-    Do not include file extensions.
-    The second header should have no spaces.
-
 SHORT DESCRIPTION
-    {{ Short Description Placeholder }}
-
-    ABOUT TOPIC NOTE:
-    About topics can be no longer than 80 characters wide when rendered to text.
-    Any topics greater than 80 characters will be automatically wrapped.
-    The generated about topic will be encoded UTF-8.
+    Helper functions for Microsoft Azure and Microsoft Entra ID group naming and
+    Intune app assignment groups.
 
 LONG DESCRIPTION
-    {{ Long Description Placeholder }}
+    tcs.azure is part of the TheCodeSaiyan PowerShell suite and requires
+    tcs.core 0.3.0 or later, which provides its configuration, update check and
+    telemetry.
 
-Optional Subtopics
-    {{ Optional Subtopic Placeholder }}
+    Commands that call Microsoft Entra ID need the Microsoft Entra PowerShell
+    module (Microsoft.Entra.Groups or Microsoft.Entra) and a connected session
+    (Connect-Entra). It is not a RequiredModule: tcs.azure imports without it,
+    and New-IntuneAppGroup stops with install instructions when it is missing.
+
+COMMANDS
+    Microsoft Entra ID groups
+        New-IntuneAppGroup        Creates an "Available" and a "Required"
+                                  security group for each application name
+                                  (Intune-AG-<Name>-<Intent>, or
+                                  Intune-ACG-<Name>-<Intent> with -Collection).
+                                  Existing groups are skipped with a warning.
+                                  Supports -WhatIf and -Confirm.
+
+    Naming
+        New-TcsDepartmentalGroup  Builds a standardised group name from a
+                                  prefix, division, optional department and
+                                  optional suffix. Returns the name only; it
+                                  creates nothing.
+
+    Run Get-Help <command> -Full for parameters and examples.
+
+CONFIGURATION
+    Settings are read with Get-ModuleConfig when the module loads and changed
+    with Set-ModuleConfig. The settings file is:
+
+        <ApplicationData>/PowerShell/Config/tcs.azure/Module.Config.json
+
+    It is created with the tcs.core defaults the first time the module loads.
+
+    UpdateWarning             Show a warning when a newer version is
+                              available (default $true).
+    UpdateCheckIntervalHours  Hours between PowerShell Gallery update checks
+                              (default 24).
+    Telemetry                 Send anonymous usage telemetry (default $true).
+    TelemetryUri              HTTPS telemetry ingestion endpoint (default
+                              empty: nothing is sent).
+    TelemetryApiKey           API key for the telemetry endpoint.
+
+ENVIRONMENT VARIABLES
+    TCS_TELEMETRY_OPTOUT=1   Turns telemetry off for all tcs modules.
+    TCS_SKIP_UPDATE_CHECK=1  Turns the gallery update check off.
+    TCS_CONFIG_ROOT          Moves the settings folder.
+
+TELEMETRY
+    Each tcs.azure command, and the module load, calls tcs.core's
+    Invoke-TelemetryCollection, which sends anonymous usage events (command
+    name, duration, success, exception type, PowerShell and OS version and a
+    random installation ID). No user, machine, path or error text is sent.
+    Nothing is sent until a TelemetryUri is configured.
+
+    To opt out, set TCS_TELEMETRY_OPTOUT=1 or run
+    Set-ModuleConfig -ModuleName tcs.azure -Telemetry $false.
 
 EXAMPLES
-    {{ Code or descriptive examples of how to leverage the functions described.
-    }}
+    Build a departmental group name:
 
-NOTE
-    {{ Note Placeholder - Additional information that a user needs to know.}}
+        New-TcsDepartmentalGroup -Prefix 'SG' -Division 'Human Resources' -Department 'Payroll'
 
-TROUBLESHOOTING NOTE
-    {{ Troubleshooting Placeholder - Warns users of bugs}}
-    {{ Explains behavior that is likely to change with fixes }}
+    Preview the Intune app groups for two applications:
+
+        Connect-Entra -Scopes Group.ReadWrite.All
+        New-IntuneAppGroup -Name 'Company Portal', 'Office Apps' -WhatIf
+
+    Turn off update warnings for tcs.azure:
+
+        Set-ModuleConfig -ModuleName tcs.azure -UpdateWarning $false
+
+    Turn off telemetry for every tcs module:
+
+        $env:TCS_TELEMETRY_OPTOUT = '1'
 
 SEE ALSO
-    {{ See also placeholder }}
-    {{ You can also list related articles, blogs, and video URLs. }}
+    about_tcs.core
+    New-IntuneAppGroup
+    New-TcsDepartmentalGroup
+    Get-ModuleConfig
+    Set-ModuleConfig
+    Invoke-TelemetryCollection
+    https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure
 
 KEYWORDS
-    {{List alternate names or titles for this topic that readers might use.}}
-    - {{ Keyword Placeholder }}
-    - {{ Keyword Placeholder }}
-    - {{ Keyword Placeholder }}
-    - {{ Keyword Placeholder }}
-
+    tcs
+    TheCodeSaiyan
+    Azure
+    Entra
+    Intune
