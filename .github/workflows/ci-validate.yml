@@ -1,4 +1,5 @@
-name: CI - Validate Module
+# Keep this name: create-version-tag.yml and generate-docs.yml run after 'CI Validate'.
+name: 'CI Validate'
 
 on:
   pull_request:

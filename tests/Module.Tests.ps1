@@ -87,6 +87,21 @@ Describe 'Help for <Name>' -ForEach $PublicFunctions {
     }
 }
 
+Describe 'Telemetry coverage for <Name>' -ForEach $PublicFunctions {
+    # Guard: every exported command must report start and end usage telemetry through tcs.core.
+    BeforeAll {
+        $definition = (Get-Command -Name $Name -Module tcs.azure).Definition
+    }
+
+    It 'Sends Start telemetry' {
+        $definition | Should -Match 'Invoke-TelemetryCollection\b[^\r\n]*-Stage\s+Start'
+    }
+
+    It 'Sends End telemetry' {
+        $definition | Should -Match 'Invoke-TelemetryCollection\b[^\r\n]*-Stage\s+End'
+    }
+}
+
 Describe 'PSScriptAnalyzer' -Skip:(-not (Get-Module -ListAvailable -Name PSScriptAnalyzer)) {
     It 'Reports no findings with the repository settings' {
         $settings = Join-Path -Path $RepoRoot -ChildPath 'PSScriptAnalyzerSettings.psd1'

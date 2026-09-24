@@ -50,6 +50,17 @@ Describe 'New-TcsDepartmentalGroup' {
         }
     }
 
+    Context 'Telemetry' {
+        It 'Records start and end telemetry and returns only the name' {
+            Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+            $result = @(New-TcsDepartmentalGroup -Prefix 'SG' -Division 'Finance')
+            $result | Should -BeExactly @('SG-Finance')
+            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' -and $CommandName -eq 'New-TcsDepartmentalGroup' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Failed } -Times 0 -Exactly
+        }
+    }
+
     Context 'Parameter validation' {
         It 'Rejects a prefix containing whitespace' {
             { New-TcsDepartmentalGroup -Prefix 'S G' -Division 'Finance' } | Should -Throw
