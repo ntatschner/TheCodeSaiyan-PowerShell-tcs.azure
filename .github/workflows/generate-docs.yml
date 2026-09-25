@@ -5,9 +5,9 @@ on:
     workflows: ['CI Validate']
     types: [completed]
     branches: [ main ]
+  # main is covered by workflow_run after CI; a push trigger too made two runs race to commit docs
   push:
     branches:
-      - main
       - dev
     paths:
       - 'modules/**/*.ps1'
