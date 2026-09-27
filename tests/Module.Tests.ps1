@@ -46,9 +46,9 @@ Describe 'tcs.azure module' {
         $Module.ModuleType | Should -Be 'Script'
     }
 
-    It 'Requires tcs.core 0.3.0 or later' {
+    It 'Requires tcs.core 0.4.0 or later' {
         $required = @((Import-PowerShellDataFile -Path $ManifestPath).RequiredModules) | Where-Object { $_.ModuleName -eq 'tcs.core' }
-        [version]$required.ModuleVersion | Should -BeGreaterOrEqual ([version]'0.3.0')
+        [version]$required.ModuleVersion | Should -BeGreaterOrEqual ([version]'0.4.0')
     }
 
     It 'Does not write files into the module folder when imported' {
@@ -94,17 +94,31 @@ Describe 'Help for <Name>' -ForEach $PublicFunctions {
 }
 
 Describe 'Telemetry coverage for <Name>' -ForEach $PublicFunctions {
-    # Guard: every exported command must report start and end usage telemetry through tcs.core.
+    # Guard: every exported command must record usage telemetry through the tcs.core wrapper
+    # (Start-TcsTelemetry in begin, Invoke-TcsCommand -Token in process, Complete-TcsTelemetry in end).
     BeforeAll {
-        $definition = (Get-Command -Name $Name -Module tcs.azure).Definition
+        $command = Get-Command -Name $Name -Module tcs.azure
+        $definition = $command.Definition
     }
 
-    It 'Sends Start telemetry' {
-        $definition | Should -Match 'Invoke-TelemetryCollection\b[^\r\n]*-Stage\s+Start'
+    It 'Starts telemetry in the begin block' {
+        [string]$command.ScriptBlock.Ast.Body.BeginBlock | Should -Match '\$telemetry\s*=\s*Start-TcsTelemetry\b'
     }
 
-    It 'Sends End telemetry' {
-        $definition | Should -Match 'Invoke-TelemetryCollection\b[^\r\n]*-Stage\s+End'
+    It 'Runs the process block in Invoke-TcsCommand -Token' {
+        [string]$command.ScriptBlock.Ast.Body.ProcessBlock | Should -Match 'Invoke-TcsCommand\s+-Token\s+\$telemetry\s+-ScriptBlock'
+    }
+
+    It 'Completes telemetry in the end block' {
+        [string]$command.ScriptBlock.Ast.Body.EndBlock | Should -Match 'Complete-TcsTelemetry\s+-Token\s+\$telemetry\b'
+    }
+
+    It 'Does not call Invoke-TelemetryCollection itself' {
+        $definition | Should -Not -Match 'Invoke-TelemetryCollection'
+    }
+
+    It 'Writes errors with Write-CommandError so they are reported' {
+        $definition | Should -Not -Match '\$PSCmdlet\.WriteError\(|Write-Error\b'
     }
 }
 

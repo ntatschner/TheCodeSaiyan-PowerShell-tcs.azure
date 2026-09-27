@@ -55,6 +55,8 @@
     https://learn.microsoft.com/powershell/module/microsoft.entra.groups/get-entragroup
 #>
 function Get-IntuneAppGroup {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'lastError',
+        Justification = 'Set inside the Invoke-TcsCommand script block and read in the end block.')]
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     [OutputType('Tcs.Azure.IntuneAppGroup')]
     param(
@@ -70,27 +72,19 @@ function Get-IntuneAppGroup {
     )
 
     begin {
-        $TelemetryArgs = @{
-            ModuleName    = $MyInvocation.MyCommand.Module.Name
-            ModuleVersion = [string]$MyInvocation.MyCommand.Module.Version
-            CommandName   = $MyInvocation.MyCommand.Name
-            ExecutionID   = [guid]::NewGuid().ToString()
-        }
-        Invoke-TelemetryCollection @TelemetryArgs -Stage Start -ClearTimer
+        $telemetry = Start-TcsTelemetry
+        # Invoke-TcsCommand does not see errors written with Write-CommandError, so the last one is reported in the end block
         $lastError = $null
-        $telemetrySent = $false
 
         $prerequisiteError = Get-EntraPrerequisiteError -CommandName $MyInvocation.MyCommand.Name -RequiredCommand 'Get-EntraGroup'
         if ($prerequisiteError) {
-            $telemetrySent = $true
-            Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $prerequisiteError
+            Complete-TcsTelemetry -Token $telemetry -ErrorRecord $prerequisiteError
             $PSCmdlet.ThrowTerminatingError($prerequisiteError)
         }
     }
 
     process {
-        $completed = $false
-        try {
+        Invoke-TcsCommand -Token $telemetry -ScriptBlock {
             if ($PSCmdlet.ParameterSetName -eq 'All') {
                 try {
                     Find-IntuneAppGroup | ForEach-Object { ConvertTo-IntuneAppGroupObject -Group $_ }
@@ -100,7 +94,7 @@ function Get-IntuneAppGroup {
                 }
                 catch {
                     $lastError = $_
-                    Write-Error -ErrorRecord $_
+                    Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
                 }
             }
             else {
@@ -110,7 +104,7 @@ function Get-IntuneAppGroup {
                         $exception = New-Object -TypeName System.ArgumentException -ArgumentList 'An application name cannot be blank or whitespace only.', 'Name'
                         $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'BlankName', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $appName
                         $lastError = $errorRecord
-                        $PSCmdlet.WriteError($errorRecord)
+                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
                         continue
                     }
                     try {
@@ -121,40 +115,14 @@ function Get-IntuneAppGroup {
                     }
                     catch {
                         $lastError = $_
-                        Write-Error -ErrorRecord $_
+                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
                     }
-                }
-            }
-            $completed = $true
-        }
-        catch {
-            $lastError = $_
-            throw
-        }
-        finally {
-            # The end block does not run after a terminating error or when a downstream command
-            # (for example Select-Object -First) stops the pipeline, so End telemetry is sent here.
-            if (-not $completed -and -not $telemetrySent) {
-                $telemetrySent = $true
-                if ($lastError) {
-                    Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
-                }
-                else {
-                    Invoke-TelemetryCollection @TelemetryArgs -Stage End
                 }
             }
         }
     }
 
     end {
-        if (-not $telemetrySent) {
-            $telemetrySent = $true
-            if ($lastError) {
-                Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
-            }
-            else {
-                Invoke-TelemetryCollection @TelemetryArgs -Stage End
-            }
-        }
+        Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
     }
 }

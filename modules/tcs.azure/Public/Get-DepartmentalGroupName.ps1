@@ -71,6 +71,8 @@
     Company: TheCodeSaiyan
 #>
 function Get-DepartmentalGroupName {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'lastError',
+        Justification = 'Set inside the Invoke-TcsCommand script block and read in the end block.')]
     [CmdletBinding()]
     [Alias('New-TcsDepartmentalGroup')]
     [OutputType([string])]
@@ -97,61 +99,27 @@ function Get-DepartmentalGroupName {
     )
 
     begin {
-        $TelemetryArgs = @{
-            ModuleName    = $MyInvocation.MyCommand.Module.Name
-            ModuleVersion = [string]$MyInvocation.MyCommand.Module.Version
-            CommandName   = $MyInvocation.MyCommand.Name
-            ExecutionID   = [guid]::NewGuid().ToString()
-        }
-        Invoke-TelemetryCollection @TelemetryArgs -Stage Start -ClearTimer
+        $telemetry = Start-TcsTelemetry
+        # Invoke-TcsCommand does not see errors written with Write-CommandError, so the last one is reported in the end block
         $lastError = $null
-        $telemetrySent = $false
     }
 
     process {
-        $completed = $false
-        try {
+        Invoke-TcsCommand -Token $telemetry -ScriptBlock {
             $groupName = ConvertTo-DepartmentalGroupName -Prefix $Prefix -Division $Division -Department $Department -Suffix $Suffix
             if (-not $groupName) {
                 $exception = New-Object -TypeName System.ArgumentException -ArgumentList (
                     "The division '$Division' contains no letters or digits that can be used in a group name.", 'Division')
                 $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'InvalidDivision', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $Division
                 $lastError = $errorRecord
-                $PSCmdlet.WriteError($errorRecord)
-                $completed = $true
+                Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
                 return
             }
             $groupName
-            $completed = $true
-        }
-        catch {
-            $lastError = $_
-            throw
-        }
-        finally {
-            # The end block does not run after a terminating error or when a downstream command
-            # (for example Select-Object -First) stops the pipeline, so End telemetry is sent here.
-            if (-not $completed -and -not $telemetrySent) {
-                $telemetrySent = $true
-                if ($lastError) {
-                    Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
-                }
-                else {
-                    Invoke-TelemetryCollection @TelemetryArgs -Stage End
-                }
-            }
         }
     }
 
     end {
-        if (-not $telemetrySent) {
-            $telemetrySent = $true
-            if ($lastError) {
-                Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
-            }
-            else {
-                Invoke-TelemetryCollection @TelemetryArgs -Stage End
-            }
-        }
+        Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
     }
 }

@@ -17,7 +17,7 @@
     CompatiblePSEditions = @('Desktop', 'Core')
     PowerShellVersion    = '5.1'
     RequiredModules      = @(
-        @{ ModuleName = 'tcs.core'; ModuleVersion = '0.3.0' }
+        @{ ModuleName = 'tcs.core'; ModuleVersion = '0.4.0' }
     )
     FunctionsToExport    = @(
         'Get-DepartmentalGroupName',

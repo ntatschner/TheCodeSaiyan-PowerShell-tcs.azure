@@ -84,6 +84,8 @@
     https://learn.microsoft.com/entra/identity/users/groups-dynamic-membership
 #>
 function New-TcsEntraDepartmentalGroup {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'lastError',
+        Justification = 'Set inside the Invoke-TcsCommand script block and read in the end block.')]
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType('Tcs.Azure.DepartmentalGroup')]
     param(
@@ -116,15 +118,9 @@ function New-TcsEntraDepartmentalGroup {
     )
 
     begin {
-        $TelemetryArgs = @{
-            ModuleName    = $MyInvocation.MyCommand.Module.Name
-            ModuleVersion = [string]$MyInvocation.MyCommand.Module.Version
-            CommandName   = $MyInvocation.MyCommand.Name
-            ExecutionID   = [guid]::NewGuid().ToString()
-        }
-        Invoke-TelemetryCollection @TelemetryArgs -Stage Start -ClearTimer
+        $telemetry = Start-TcsTelemetry
+        # Invoke-TcsCommand does not see errors written with Write-CommandError, so the last one is reported in the end block
         $lastError = $null
-        $telemetrySent = $false
 
         $requiredCommands = @('Get-EntraGroup', 'New-EntraGroup')
         if ($Owner) {
@@ -150,23 +146,20 @@ function New-TcsEntraDepartmentalGroup {
         }
 
         if ($prerequisiteError) {
-            $telemetrySent = $true
-            Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $prerequisiteError
+            Complete-TcsTelemetry -Token $telemetry -ErrorRecord $prerequisiteError
             $PSCmdlet.ThrowTerminatingError($prerequisiteError)
         }
     }
 
     process {
-        $completed = $false
-        try {
+        Invoke-TcsCommand -Token $telemetry -ScriptBlock {
             $groupName = ConvertTo-DepartmentalGroupName -Prefix $Prefix -Division $Division -Department $Department -Suffix $Suffix
             if (-not $groupName) {
                 $exception = New-Object -TypeName System.ArgumentException -ArgumentList (
                     "The division '$Division' contains no letters or digits that can be used in a group name.", 'Division')
                 $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'InvalidDivision', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $Division
                 $lastError = $errorRecord
-                $PSCmdlet.WriteError($errorRecord)
-                $completed = $true
+                Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
                 return
             }
 
@@ -194,13 +187,12 @@ function New-TcsEntraDepartmentalGroup {
                 $filter = "DisplayName eq '$($groupName -replace "'", "''")'"
                 $existing = @(Get-EntraGroup -Filter $filter -ErrorAction Stop)
                 if ($existing.Count -gt 0) {
-                    Write-Warning "Group `"$groupName`" already exists."
+                    $PSCmdlet.WriteWarning("Group `"$groupName`" already exists.")
                     $result.Id = $existing[0].Id
                     $result.MailNickname = $existing[0].MailNickname
                     $result.MembershipRule = $existing[0].MembershipRule
                     $result.Status = 'Existing'
                     $result
-                    $completed = $true
                     return
                 }
 
@@ -210,7 +202,6 @@ function New-TcsEntraDepartmentalGroup {
                         $result.Status = 'WhatIf'
                         $result
                     }
-                    $completed = $true
                     return
                 }
 
@@ -239,8 +230,7 @@ function New-TcsEntraDepartmentalGroup {
                 $lastError = $_
                 $result.Status = 'Failed'
                 $result
-                Write-Error -ErrorRecord $_
-                $completed = $true
+                Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
                 return
             }
 
@@ -250,41 +240,14 @@ function New-TcsEntraDepartmentalGroup {
                 }
                 catch {
                     $lastError = $_
-                    Write-Error -ErrorRecord $_
+                    Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
                 }
             }
             $result
-            $completed = $true
-        }
-        catch {
-            # Reached when the caller asked for errors to stop (-ErrorAction Stop)
-            $lastError = $_
-            throw
-        }
-        finally {
-            # The end block does not run after a terminating error or when a downstream command
-            # (for example Select-Object -First) stops the pipeline, so End telemetry is sent here.
-            if (-not $completed -and -not $telemetrySent) {
-                $telemetrySent = $true
-                if ($lastError) {
-                    Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
-                }
-                else {
-                    Invoke-TelemetryCollection @TelemetryArgs -Stage End
-                }
-            }
         }
     }
 
     end {
-        if (-not $telemetrySent) {
-            $telemetrySent = $true
-            if ($lastError) {
-                Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
-            }
-            else {
-                Invoke-TelemetryCollection @TelemetryArgs -Stage End
-            }
-        }
+        Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
     }
 }

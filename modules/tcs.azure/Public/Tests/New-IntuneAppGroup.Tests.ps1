@@ -169,18 +169,18 @@ Describe 'New-IntuneAppGroup' {
         }
 
         It 'Records one start and one end for a piped batch' {
-            Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+            Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
             $null = 'App1', 'App2', 'App3' | New-IntuneAppGroup -Confirm:$false
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
         }
 
         It 'Records end telemetry when a downstream command stops the pipeline early' {
-            Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+            Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
             $result = 'App1', 'App2' | New-IntuneAppGroup -Confirm:$false | Select-Object -First 1
             $result.Name | Should -Be 'Intune-AG-App1-Available'
             Should -Invoke -ModuleName tcs.azure New-EntraGroup -Times 1 -Exactly
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
         }
     }
 
@@ -257,32 +257,32 @@ Describe 'New-IntuneAppGroup' {
 
     Context 'Telemetry' {
         BeforeEach {
-            Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+            Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         }
 
         It 'Records start and end telemetry' {
             $null = New-IntuneAppGroup -Name 'App1' -Confirm:$false
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
         }
 
         It 'Records failed end telemetry when a group cannot be created' {
             Mock -ModuleName tcs.azure New-EntraGroup { throw 'Insufficient privileges' }
             $null = New-IntuneAppGroup -Name 'App1' -Confirm:$false -ErrorAction SilentlyContinue
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
         }
 
         It 'Records failed end telemetry for a blank name' {
             $null = New-IntuneAppGroup -Name ' ' -Confirm:$false -ErrorAction SilentlyContinue
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 0 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 0 -Exactly
         }
 
         It 'Records failed end telemetry once with -ErrorAction Stop' {
             Mock -ModuleName tcs.azure New-EntraGroup { throw 'Insufficient privileges' }
             { New-IntuneAppGroup -Name 'App1' -Confirm:$false -ErrorAction Stop } | Should -Throw
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
         }
     }
 
@@ -306,11 +306,11 @@ Describe 'New-IntuneAppGroup without the Microsoft Entra module' {
     }
 
     It 'Records failed end telemetry when the Entra commands are missing' {
-        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         Mock -ModuleName tcs.azure Get-Command { } -ParameterFilter { $Name -in 'Get-EntraGroup', 'New-EntraGroup' }
         { New-IntuneAppGroup -Name 'App1' -Confirm:$false } | Should -Throw
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
     }
 
     It 'Skips the connection check when Get-EntraContext is not available' {

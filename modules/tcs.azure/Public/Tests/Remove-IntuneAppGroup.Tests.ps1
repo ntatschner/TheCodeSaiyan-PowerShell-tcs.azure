@@ -88,12 +88,12 @@ Describe 'Remove-IntuneAppGroup' {
     }
 
     It 'Continues and records failed telemetry when a group cannot be removed' {
-        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         Mock -ModuleName tcs.azure Remove-EntraGroup { throw 'Insufficient privileges' } -ParameterFilter { $GroupId -eq '1' }
         Remove-IntuneAppGroup -Name 'App1' -Confirm:$false -ErrorVariable errors -ErrorAction SilentlyContinue
         ($errors | Out-String) | Should -Match 'Insufficient privileges'
         Should -Invoke -ModuleName tcs.azure Remove-EntraGroup -Times 3 -Exactly
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
     }
 
     It 'Throws a helpful error when the Entra commands are missing' {
@@ -102,9 +102,9 @@ Describe 'Remove-IntuneAppGroup' {
     }
 
     It 'Records start and end telemetry' {
-        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         Remove-IntuneAppGroup -Name 'App1' -Confirm:$false
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
     }
 }
