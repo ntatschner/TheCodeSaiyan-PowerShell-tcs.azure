@@ -72,8 +72,8 @@ ENVIRONMENT VARIABLES
     TCS_CONFIG_ROOT          Moves the settings folder.
 
 TELEMETRY
-    Each tcs.azure command records its run with tcs.core's Start-TcsTelemetry,
-    Invoke-TcsCommand and Complete-TcsTelemetry, and the module load calls
+    Each tcs.azure command records its run with tcs.core's Start-TcsTelemetry
+    and Complete-TcsTelemetry, and the module load calls
     Invoke-TelemetryCollection. They send anonymous usage events (command
     name, duration, success, exception type, PowerShell and OS version and a
     random installation ID). No user, machine, path or error text is sent.
@@ -114,7 +114,8 @@ SEE ALSO
     Get-ModuleConfig
     Set-ModuleConfig
     Invoke-TelemetryCollection
-    Invoke-TcsCommand
+    Start-TcsTelemetry
+    Complete-TcsTelemetry
     https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure
 
 KEYWORDS

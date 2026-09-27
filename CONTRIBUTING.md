@@ -48,13 +48,13 @@ Every file in `Public/` must also be listed in `FunctionsToExport` in `tcs.azure
   full command names (no aliases). PSScriptAnalyzer runs with `PSScriptAnalyzerSettings.psd1`
   and **warnings fail the build**. Suppress a rule only with a written justification.
 - **State-changing functions** (`New-`, `Set-`, `Remove-` ...) support `-WhatIf`/`-Confirm`.
-- **Telemetry:** every exported function records usage with the tcs.core wrapper:
-  `$telemetry = Start-TcsTelemetry` in `begin`, the body in
-  `Invoke-TcsCommand -Token $telemetry -ScriptBlock { ... }` in `process` and
-  `Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError` in `end`. Write
-  non-terminating errors with the private `Write-CommandError` (and keep the last one in
-  `$lastError`) so they keep the command's error ID and are reported. Inside the script block,
-  `$PSBoundParameters` and `$MyInvocation` describe the script block; copy them first if needed.
+- **Telemetry:** every exported function records usage with tcs.core:
+  `$telemetry = Start-TcsTelemetry` in `begin`, and
+  `Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError` in `end` and in the
+  `process` block's `finally` when the body did not complete (the end block does not run after
+  a terminating error or a stopped pipeline). Keep every written error in `$lastError` so the
+  run is reported as failed. Do not use `Invoke-TcsCommand`: inside its script block, errors and
+  warnings do not reach the command's `-ErrorVariable`/`-WarningVariable` and error IDs change.
   `tests/Module.Tests.ps1` checks the wiring.
 - **Help:** every exported function has comment-based help with a synopsis, description,
   every parameter and at least one example.
