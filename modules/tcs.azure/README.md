@@ -12,6 +12,6 @@
 The Entra commands need the Microsoft Entra PowerShell module and `Connect-Entra`; the commands
 that change Entra ID support `-WhatIf`.
 
-Requires tcs.core 0.3.0 or later. See the
+Requires tcs.core 0.4.0 or later. See the
 [repository README](https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure) for
 installation, configuration and the telemetry statement.

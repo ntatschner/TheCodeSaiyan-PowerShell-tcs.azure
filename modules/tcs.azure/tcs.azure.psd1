@@ -8,7 +8,7 @@
 
 @{
     RootModule           = 'tcs.azure.psm1'
-    ModuleVersion        = '0.2.0'
+    ModuleVersion        = '0.3.0'
     GUID                 = '9d6151da-f9cf-4606-a985-d3f5c463d419'
     Author               = 'Nigel Tatschner'
     CompanyName          = 'TheCodeSaiyan'
@@ -17,7 +17,7 @@
     CompatiblePSEditions = @('Desktop', 'Core')
     PowerShellVersion    = '5.1'
     RequiredModules      = @(
-        @{ ModuleName = 'tcs.core'; ModuleVersion = '0.3.0' }
+        @{ ModuleName = 'tcs.core'; ModuleVersion = '0.4.0' }
     )
     FunctionsToExport    = @(
         'Get-DepartmentalGroupName',

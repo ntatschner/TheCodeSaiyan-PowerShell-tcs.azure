@@ -70,11 +70,27 @@ Describe 'Get-IntuneAppGroup' {
     }
 
     It 'Writes a non-terminating error and records failed telemetry when the lookup fails' {
-        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         Mock -ModuleName tcs.azure Get-EntraGroup { throw 'Forbidden' } -ParameterFilter { $Filter }
         $null = Get-IntuneAppGroup -Name 'App1' -ErrorVariable errors -ErrorAction SilentlyContinue
         ($errors | Out-String) | Should -Match 'Forbidden'
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+    }
+
+    It 'Records failed end telemetry once with -ErrorAction Stop' {
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.azure Get-EntraGroup { throw 'Forbidden' } -ParameterFilter { $Filter }
+        { Get-IntuneAppGroup -Name 'App1' -ErrorAction Stop } | Should -Throw '*Forbidden*'
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+    }
+
+    It 'Records failed end telemetry when an earlier item failed and the pipeline is stopped early' {
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
+        $result = ' ', 'Company Portal' | Get-IntuneAppGroup -ErrorAction SilentlyContinue | Select-Object -First 1
+        $result.Name | Should -Be 'Intune-AG-CompanyPortal-Available'
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
     }
 
     It 'Throws one clear error when there is no Connect-Entra session' {
@@ -83,16 +99,16 @@ Describe 'Get-IntuneAppGroup' {
     }
 
     It 'Records start and end telemetry' {
-        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         $null = Get-IntuneAppGroup -All
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
     }
 
     It 'Records end telemetry when a downstream command stops the pipeline early' {
-        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         $result = Get-IntuneAppGroup -All | Select-Object -First 1
         $result.Name | Should -Be 'Intune-AG-CompanyPortal-Available'
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
     }
 }

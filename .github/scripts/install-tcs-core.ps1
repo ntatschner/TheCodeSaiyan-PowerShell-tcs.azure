@@ -5,7 +5,7 @@
 #>
 [CmdletBinding()]
 param(
-    [version]$MinimumVersion = '0.3.0',
+    [version]$MinimumVersion = '0.4.0',
 
     [string]$Ref = 'main'
 )

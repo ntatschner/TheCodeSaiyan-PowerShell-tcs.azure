@@ -93,9 +93,30 @@ Describe 'Get-DepartmentalGroupName' {
         }
 
         It 'Records failed end telemetry for an invalid division' {
-            Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+            Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
             $null = Get-DepartmentalGroupName -Prefix 'SG' -Division '&' -ErrorAction SilentlyContinue
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+        }
+
+        It 'Records failed end telemetry once with -ErrorAction Stop' {
+            Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
+            { Get-DepartmentalGroupName -Prefix 'SG' -Division '&' -ErrorAction Stop } | Should -Throw
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+        }
+
+        It 'Records failed end telemetry when one piped row is invalid' {
+            Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
+            $null = @([pscustomobject]@{ Division = ',' }, [pscustomobject]@{ Division = 'Legal' }) |
+                Get-DepartmentalGroupName -Prefix 'SG' -ErrorAction SilentlyContinue
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+        }
+
+        It 'Reports the error under the command name' {
+            $null = Get-DepartmentalGroupName -Prefix 'SG' -Division ',' -ErrorVariable errors -ErrorAction SilentlyContinue
+            @($errors).Count | Should -Be 1
+            $errors[0].FullyQualifiedErrorId | Should -Be 'InvalidDivision,Get-DepartmentalGroupName'
+            $errors[0].InvocationInfo.MyCommand.Name | Should -Be 'Get-DepartmentalGroupName'
         }
     }
 
@@ -138,28 +159,28 @@ Describe 'Get-DepartmentalGroupName' {
 
     Context 'Telemetry' {
         BeforeEach {
-            Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+            Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         }
 
         It 'Records start and end telemetry and returns only the name' {
             $result = @(Get-DepartmentalGroupName -Prefix 'SG' -Division 'Finance')
             $result | Should -BeExactly @('SG-Finance')
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' -and $CommandName -eq 'Get-DepartmentalGroupName' } -Times 1 -Exactly
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Failed } -Times 0 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' -and $CommandName -eq 'Get-DepartmentalGroupName' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Failed } -Times 0 -Exactly
         }
 
         It 'Records one start and one end for a piped batch' {
             $null = @('Finance', 'Legal', 'Sales') | ForEach-Object { [pscustomobject]@{ Division = $_ } } | Get-DepartmentalGroupName -Prefix 'SG'
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
         }
 
         It 'Records end telemetry when a downstream command stops the pipeline early' {
             $result = @('Finance', 'Legal', 'Sales') | ForEach-Object { [pscustomobject]@{ Division = $_ } } |
                 Get-DepartmentalGroupName -Prefix 'SG' | Select-Object -First 1
             $result | Should -BeExactly 'SG-Finance'
-            Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
+            Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
         }
     }
 

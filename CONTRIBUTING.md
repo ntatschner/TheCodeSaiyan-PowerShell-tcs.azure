@@ -1,17 +1,17 @@
 # Contributing to tcs.azure
 
 tcs.azure is part of the TheCodeSaiyan PowerShell suite and depends on
-[tcs.core](https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.core) 0.3.0 or later for
+[tcs.core](https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.core) 0.4.0 or later for
 configuration, update checks and telemetry.
 
 ## Getting started
 
-Requirements: PowerShell 7.2+ for development, tcs.core 0.3.0+, Pester 5.7.1 and
+Requirements: PowerShell 7.2+ for development, tcs.core 0.4.0+, Pester 5.7.1 and
 PSScriptAnalyzer 1.23.0. The Microsoft Entra module is **not** needed to run the tests; its
 cmdlets are stubbed and mocked.
 
 ```powershell
-Install-Module tcs.core -MinimumVersion 0.3.0 -Scope CurrentUser
+Install-Module tcs.core -MinimumVersion 0.4.0 -Scope CurrentUser
 Install-Module Pester -RequiredVersion 5.7.1 -Scope CurrentUser -SkipPublisherCheck
 Install-Module PSScriptAnalyzer -RequiredVersion 1.23.0 -Scope CurrentUser
 
@@ -48,6 +48,14 @@ Every file in `Public/` must also be listed in `FunctionsToExport` in `tcs.azure
   full command names (no aliases). PSScriptAnalyzer runs with `PSScriptAnalyzerSettings.psd1`
   and **warnings fail the build**. Suppress a rule only with a written justification.
 - **State-changing functions** (`New-`, `Set-`, `Remove-` ...) support `-WhatIf`/`-Confirm`.
+- **Telemetry:** every exported function records usage with tcs.core:
+  `$telemetry = Start-TcsTelemetry` in `begin`, and
+  `Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError` in `end` and in the
+  `process` block's `finally` when the body did not complete (the end block does not run after
+  a terminating error or a stopped pipeline). Keep every written error in `$lastError` so the
+  run is reported as failed. Do not use `Invoke-TcsCommand`: inside its script block, errors and
+  warnings do not reach the command's `-ErrorVariable`/`-WarningVariable` and error IDs change.
+  `tests/Module.Tests.ps1` checks the wiring.
 - **Help:** every exported function has comment-based help with a synopsis, description,
   every parameter and at least one example.
 - **Tests:** new behaviour and bug fixes come with Pester tests. Tests must not touch the real

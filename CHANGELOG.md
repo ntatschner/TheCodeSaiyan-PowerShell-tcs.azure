@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-27
+
+Requires tcs.core 0.4.0 or later.
+
+### Changed
+- Every command records telemetry with tcs.core 0.4.0's `Start-TcsTelemetry` and
+  `Complete-TcsTelemetry` instead of its own calls to `Invoke-TelemetryCollection`. One event
+  is still sent per run (one for a whole pipeline), reported as failed when the command wrote
+  an error, and also when it stops on an error or a downstream command stops the pipeline.
+  When a tcs.azure command calls another tcs.azure command, only the outer command is recorded.
+- The minimum tcs.core version is 0.4.0 (manifest, CI and documentation).
+
 ## [0.2.0] - 2026-09-24
 
 Requires tcs.core 0.3.0 or later.

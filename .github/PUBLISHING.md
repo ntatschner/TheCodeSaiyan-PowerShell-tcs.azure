@@ -78,7 +78,7 @@ RequiredModule, and tcs.azure imports without it.
   and CI Validate must have succeeded.
 - **Publish did not start after the tag was created**: expected with `GITHUB_TOKEN`; run Publish to
   PSGallery manually on the tag as described above.
-- **Import fails in validation**: check that `tcs.core` 0.3.0 or later is on the PowerShell Gallery
+- **Import fails in validation**: check that `tcs.core` 0.4.0 or later is on the PowerShell Gallery
   and that the module imports locally with `Import-Module ./modules/tcs.azure/tcs.azure.psd1`.
 
 ## Security

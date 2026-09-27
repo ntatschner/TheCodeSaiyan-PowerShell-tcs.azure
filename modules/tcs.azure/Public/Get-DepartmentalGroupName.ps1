@@ -97,15 +97,8 @@ function Get-DepartmentalGroupName {
     )
 
     begin {
-        $TelemetryArgs = @{
-            ModuleName    = $MyInvocation.MyCommand.Module.Name
-            ModuleVersion = [string]$MyInvocation.MyCommand.Module.Version
-            CommandName   = $MyInvocation.MyCommand.Name
-            ExecutionID   = [guid]::NewGuid().ToString()
-        }
-        Invoke-TelemetryCollection @TelemetryArgs -Stage Start -ClearTimer
+        $telemetry = Start-TcsTelemetry
         $lastError = $null
-        $telemetrySent = $false
     }
 
     process {
@@ -130,28 +123,15 @@ function Get-DepartmentalGroupName {
         }
         finally {
             # The end block does not run after a terminating error or when a downstream command
-            # (for example Select-Object -First) stops the pipeline, so End telemetry is sent here.
-            if (-not $completed -and -not $telemetrySent) {
-                $telemetrySent = $true
-                if ($lastError) {
-                    Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
-                }
-                else {
-                    Invoke-TelemetryCollection @TelemetryArgs -Stage End
-                }
+            # (for example Select-Object -First) stops the pipeline, so the run is completed here.
+            # $PSCmdlet.WriteError() with -ErrorAction Stop also ends the command without reaching the catch block.
+            if (-not $completed) {
+                Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
             }
         }
     }
 
     end {
-        if (-not $telemetrySent) {
-            $telemetrySent = $true
-            if ($lastError) {
-                Invoke-TelemetryCollection @TelemetryArgs -Stage End -Failed $true -Exception $lastError
-            }
-            else {
-                Invoke-TelemetryCollection @TelemetryArgs -Stage End
-            }
-        }
+        Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
     }
 }

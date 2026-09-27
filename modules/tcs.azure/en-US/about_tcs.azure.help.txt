@@ -7,7 +7,7 @@ SHORT DESCRIPTION
 
 LONG DESCRIPTION
     tcs.azure is part of the TheCodeSaiyan PowerShell suite and requires
-    tcs.core 0.3.0 or later, which provides its configuration, update check and
+    tcs.core 0.4.0 or later, which provides its configuration, update check and
     telemetry.
 
     Commands that call Microsoft Entra ID need the Microsoft Entra PowerShell
@@ -72,11 +72,16 @@ ENVIRONMENT VARIABLES
     TCS_CONFIG_ROOT          Moves the settings folder.
 
 TELEMETRY
-    Each tcs.azure command, and the module load, calls tcs.core's
-    Invoke-TelemetryCollection, which sends anonymous usage events (command
+    Each tcs.azure command records its run with tcs.core's Start-TcsTelemetry
+    and Complete-TcsTelemetry, and the module load calls
+    Invoke-TelemetryCollection. They send anonymous usage events (command
     name, duration, success, exception type, PowerShell and OS version and a
     random installation ID). No user, machine, path or error text is sent.
     Nothing is sent until a TelemetryUri is configured.
+
+    One event is sent per command run (one for a whole pipeline). When a
+    tcs.azure command calls another tcs.azure command, only the outer command
+    is recorded.
 
     To opt out, set TCS_TELEMETRY_OPTOUT=1 or run
     Set-ModuleConfig -ModuleName tcs.azure -Telemetry $false.
@@ -109,6 +114,8 @@ SEE ALSO
     Get-ModuleConfig
     Set-ModuleConfig
     Invoke-TelemetryCollection
+    Start-TcsTelemetry
+    Complete-TcsTelemetry
     https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure
 
 KEYWORDS

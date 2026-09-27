@@ -117,11 +117,11 @@ Describe 'New-TcsEntraDepartmentalGroup' {
     }
 
     It 'Returns a Failed object and records failed telemetry when the group cannot be created' {
-        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         Mock -ModuleName tcs.azure New-EntraGroup { throw 'Insufficient privileges' }
         $result = New-TcsEntraDepartmentalGroup -Prefix 'SG' -Division 'Finance' -Confirm:$false -ErrorAction SilentlyContinue
         $result.Status | Should -Be 'Failed'
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
     }
 
     It 'Throws one clear error when there is no Connect-Entra session' {
@@ -130,9 +130,9 @@ Describe 'New-TcsEntraDepartmentalGroup' {
     }
 
     It 'Records start and end telemetry' {
-        Mock -ModuleName tcs.azure Invoke-TelemetryCollection { }
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
         $null = New-TcsEntraDepartmentalGroup -Prefix 'SG' -Division 'Finance' -Confirm:$false
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
-        Should -Invoke -ModuleName tcs.azure Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'Start' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and -not $Failed } -Times 1 -Exactly
     }
 }
