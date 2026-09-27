@@ -85,6 +85,14 @@ Describe 'Get-IntuneAppGroup' {
         Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
     }
 
+    It 'Records failed end telemetry when an earlier item failed and the pipeline is stopped early' {
+        Mock -ModuleName tcs.core Invoke-TelemetryCollection { }
+        $result = ' ', 'Company Portal' | Get-IntuneAppGroup -ErrorAction SilentlyContinue | Select-Object -First 1
+        $result.Name | Should -Be 'Intune-AG-CompanyPortal-Available'
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' } -Times 1 -Exactly
+        Should -Invoke -ModuleName tcs.core Invoke-TelemetryCollection -ParameterFilter { $Stage -eq 'End' -and $Failed } -Times 1 -Exactly
+    }
+
     It 'Throws one clear error when there is no Connect-Entra session' {
         Mock -ModuleName tcs.azure Get-EntraContext { }
         { Get-IntuneAppGroup -All } | Should -Throw '*Connect-Entra*'

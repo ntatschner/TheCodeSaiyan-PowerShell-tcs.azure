@@ -88,8 +88,6 @@
     https://learn.microsoft.com/powershell/module/microsoft.entra.groups/new-entragroup
 #>
 function New-IntuneAppGroup {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'lastError',
-        Justification = 'Set inside the Invoke-TcsCommand script block and read in the end block.')]
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType('Tcs.Azure.IntuneAppGroup')]
     param(
@@ -109,7 +107,6 @@ function New-IntuneAppGroup {
 
     begin {
         $telemetry = Start-TcsTelemetry
-        # Invoke-TcsCommand does not see errors written with Write-CommandError, so the last one is reported in the end block
         $lastError = $null
 
         $prerequisiteError = Get-EntraPrerequisiteError -CommandName $MyInvocation.MyCommand.Name -RequiredCommand 'Get-EntraGroup', 'New-EntraGroup'
@@ -132,89 +129,94 @@ function New-IntuneAppGroup {
     process {
         $completed = $false
         try {
-            Invoke-TcsCommand -Token $telemetry -ScriptBlock {
-                foreach ($appName in $Name) {
-                    $pascalName = ConvertTo-TcsPascalCaseName -Text $appName
-                    if (-not $pascalName) {
-                        $exception = New-Object -TypeName System.ArgumentException -ArgumentList 'An application name cannot be blank or whitespace only.', 'Name'
-                        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'BlankName', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $appName
-                        $lastError = $errorRecord
-                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
-                        continue
+            foreach ($appName in $Name) {
+                $pascalName = ConvertTo-TcsPascalCaseName -Text $appName
+                if (-not $pascalName) {
+                    $exception = New-Object -TypeName System.ArgumentException -ArgumentList 'An application name cannot be blank or whitespace only.', 'Name'
+                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'BlankName', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $appName
+                    $lastError = $errorRecord
+                    $PSCmdlet.WriteError($errorRecord)
+                    continue
+                }
+                $friendlyName = @($appName -split '\s+' | Where-Object { $_ }) -join ' '
+
+                foreach ($groupIntent in $intents) {
+                    Write-Progress -Activity 'Creating Intune groups' -Status "Processing $pascalName ($groupIntent)"
+
+                    $displayName = "Intune-$groupType-$pascalName-$groupIntent"
+                    $result = [pscustomobject]@{
+                        PSTypeName   = 'Tcs.Azure.IntuneAppGroup'
+                        Name         = $displayName
+                        Id           = $null
+                        AppName      = $friendlyName
+                        Intent       = $groupIntent
+                        Status       = $null
+                        MailNickname = $null
                     }
-                    $friendlyName = @($appName -split '\s+' | Where-Object { $_ }) -join ' '
+                    $result | Add-Member -MemberType AliasProperty -Name DisplayName -Value Name
 
-                    foreach ($groupIntent in $intents) {
-                        Write-Progress -Activity 'Creating Intune groups' -Status "Processing $pascalName ($groupIntent)"
-
-                        $displayName = "Intune-$groupType-$pascalName-$groupIntent"
-                        $result = [pscustomobject]@{
-                            PSTypeName   = 'Tcs.Azure.IntuneAppGroup'
-                            Name         = $displayName
-                            Id           = $null
-                            AppName      = $friendlyName
-                            Intent       = $groupIntent
-                            Status       = $null
-                            MailNickname = $null
+                    try {
+                        # Look up first so -WhatIf and -Confirm only cover groups that would really be created.
+                        # Single quotes are doubled so the name is a valid OData string literal.
+                        $filter = "DisplayName eq '$($displayName -replace "'", "''")'"
+                        $existing = @(Get-EntraGroup -Filter $filter -ErrorAction Stop)
+                        if ($existing.Count -gt 0) {
+                            Write-Warning "Group `"$displayName`" already exists."
+                            $result.Id = $existing[0].Id
+                            $result.MailNickname = $existing[0].MailNickname
+                            $result.Status = 'Existing'
+                            $result
+                            continue
                         }
-                        $result | Add-Member -MemberType AliasProperty -Name DisplayName -Value Name
 
-                        try {
-                            # Look up first so -WhatIf and -Confirm only cover groups that would really be created.
-                            # Single quotes are doubled so the name is a valid OData string literal.
-                            $filter = "DisplayName eq '$($displayName -replace "'", "''")'"
-                            $existing = @(Get-EntraGroup -Filter $filter -ErrorAction Stop)
-                            if ($existing.Count -gt 0) {
-                                $PSCmdlet.WriteWarning("Group `"$displayName`" already exists.")
-                                $result.Id = $existing[0].Id
-                                $result.MailNickname = $existing[0].MailNickname
-                                $result.Status = 'Existing'
+                        $result.MailNickname = ConvertTo-TcsMailNickname -Text $pascalName -Prefix "Intune-$groupType-" -Suffix "-$groupIntent" -HashSource $displayName
+                        if (-not $PSCmdlet.ShouldProcess($displayName, 'Create Entra ID security group')) {
+                            if ($WhatIfPreference) {
+                                $result.Status = 'WhatIf'
                                 $result
-                                continue
                             }
+                            continue
+                        }
 
-                            $result.MailNickname = ConvertTo-TcsMailNickname -Text $pascalName -Prefix "Intune-$groupType-" -Suffix "-$groupIntent" -HashSource $displayName
-                            if (-not $PSCmdlet.ShouldProcess($displayName, 'Create Entra ID security group')) {
-                                if ($WhatIfPreference) {
-                                    $result.Status = 'WhatIf'
-                                    $result
-                                }
-                                continue
-                            }
-
-                            $groupParams = @{
-                                DisplayName     = $displayName
-                                MailNickname    = $result.MailNickname
-                                Description     = "Intune $groupIntent assignment group for $friendlyName."
-                                MailEnabled     = $false
-                                SecurityEnabled = $true
-                            }
-                            Write-Verbose "Creating Intune group `"$displayName`""
-                            $group = New-EntraGroup @groupParams -ErrorAction Stop
-                            $result.Id = $group.Id
-                            $result.Status = 'Created'
-                            Write-Verbose "Group `"$displayName`" created."
-                            $result
+                        $groupParams = @{
+                            DisplayName     = $displayName
+                            MailNickname    = $result.MailNickname
+                            Description     = "Intune $groupIntent assignment group for $friendlyName."
+                            MailEnabled     = $false
+                            SecurityEnabled = $true
                         }
-                        catch [System.Management.Automation.PipelineStoppedException] {
-                            throw
-                        }
-                        catch {
-                            $lastError = $_
-                            $result.Status = 'Failed'
-                            $result
-                            Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
-                        }
+                        Write-Verbose "Creating Intune group `"$displayName`""
+                        $group = New-EntraGroup @groupParams -ErrorAction Stop
+                        $result.Id = $group.Id
+                        $result.Status = 'Created'
+                        Write-Verbose "Group `"$displayName`" created."
+                        $result
+                    }
+                    catch [System.Management.Automation.PipelineStoppedException] {
+                        throw
+                    }
+                    catch {
+                        $lastError = $_
+                        $result.Status = 'Failed'
+                        $result
+                        Write-Error -ErrorRecord $_
                     }
                 }
             }
             $completed = $true
         }
+        catch {
+            # Reached when the caller asked for errors to stop (-ErrorAction Stop)
+            $lastError = $_
+            throw
+        }
         finally {
             # The end block does not run after a terminating error or when a downstream command
-            # (for example Select-Object -First) stops the pipeline, so the progress bar is closed here.
+            # (for example Select-Object -First) stops the pipeline, so the run is completed here.
+            # $PSCmdlet.WriteError() with -ErrorAction Stop also ends the command without reaching the catch block.
             if (-not $completed) {
                 Write-Progress -Activity 'Creating Intune groups' -Completed
+                Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
             }
         }
     }

@@ -84,8 +84,6 @@
     https://learn.microsoft.com/entra/identity/users/groups-dynamic-membership
 #>
 function New-TcsEntraDepartmentalGroup {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'lastError',
-        Justification = 'Set inside the Invoke-TcsCommand script block and read in the end block.')]
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType('Tcs.Azure.DepartmentalGroup')]
     param(
@@ -119,7 +117,6 @@ function New-TcsEntraDepartmentalGroup {
 
     begin {
         $telemetry = Start-TcsTelemetry
-        # Invoke-TcsCommand does not see errors written with Write-CommandError, so the last one is reported in the end block
         $lastError = $null
 
         $requiredCommands = @('Get-EntraGroup', 'New-EntraGroup')
@@ -152,14 +149,16 @@ function New-TcsEntraDepartmentalGroup {
     }
 
     process {
-        Invoke-TcsCommand -Token $telemetry -ScriptBlock {
+        $completed = $false
+        try {
             $groupName = ConvertTo-DepartmentalGroupName -Prefix $Prefix -Division $Division -Department $Department -Suffix $Suffix
             if (-not $groupName) {
                 $exception = New-Object -TypeName System.ArgumentException -ArgumentList (
                     "The division '$Division' contains no letters or digits that can be used in a group name.", 'Division')
                 $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'InvalidDivision', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $Division
                 $lastError = $errorRecord
-                Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
+                $PSCmdlet.WriteError($errorRecord)
+                $completed = $true
                 return
             }
 
@@ -187,12 +186,13 @@ function New-TcsEntraDepartmentalGroup {
                 $filter = "DisplayName eq '$($groupName -replace "'", "''")'"
                 $existing = @(Get-EntraGroup -Filter $filter -ErrorAction Stop)
                 if ($existing.Count -gt 0) {
-                    $PSCmdlet.WriteWarning("Group `"$groupName`" already exists.")
+                    Write-Warning "Group `"$groupName`" already exists."
                     $result.Id = $existing[0].Id
                     $result.MailNickname = $existing[0].MailNickname
                     $result.MembershipRule = $existing[0].MembershipRule
                     $result.Status = 'Existing'
                     $result
+                    $completed = $true
                     return
                 }
 
@@ -202,6 +202,7 @@ function New-TcsEntraDepartmentalGroup {
                         $result.Status = 'WhatIf'
                         $result
                     }
+                    $completed = $true
                     return
                 }
 
@@ -230,7 +231,8 @@ function New-TcsEntraDepartmentalGroup {
                 $lastError = $_
                 $result.Status = 'Failed'
                 $result
-                Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
+                Write-Error -ErrorRecord $_
+                $completed = $true
                 return
             }
 
@@ -240,10 +242,24 @@ function New-TcsEntraDepartmentalGroup {
                 }
                 catch {
                     $lastError = $_
-                    Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
+                    Write-Error -ErrorRecord $_
                 }
             }
             $result
+            $completed = $true
+        }
+        catch {
+            # Reached when the caller asked for errors to stop (-ErrorAction Stop)
+            $lastError = $_
+            throw
+        }
+        finally {
+            # The end block does not run after a terminating error or when a downstream command
+            # (for example Select-Object -First) stops the pipeline, so the run is completed here.
+            # $PSCmdlet.WriteError() with -ErrorAction Stop also ends the command without reaching the catch block.
+            if (-not $completed) {
+                Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
+            }
         }
     }
 

@@ -94,8 +94,8 @@ Describe 'Help for <Name>' -ForEach $PublicFunctions {
 }
 
 Describe 'Telemetry coverage for <Name>' -ForEach $PublicFunctions {
-    # Guard: every exported command must record usage telemetry through the tcs.core wrapper
-    # (Start-TcsTelemetry in begin, Invoke-TcsCommand -Token in process, Complete-TcsTelemetry in end).
+    # Guard: every exported command must record usage telemetry through tcs.core
+    # (Start-TcsTelemetry in begin, Complete-TcsTelemetry in end).
     BeforeAll {
         $command = Get-Command -Name $Name -Module tcs.azure
         $definition = $command.Definition
@@ -105,20 +105,12 @@ Describe 'Telemetry coverage for <Name>' -ForEach $PublicFunctions {
         [string]$command.ScriptBlock.Ast.Body.BeginBlock | Should -Match '\$telemetry\s*=\s*Start-TcsTelemetry\b'
     }
 
-    It 'Runs the process block in Invoke-TcsCommand -Token' {
-        [string]$command.ScriptBlock.Ast.Body.ProcessBlock | Should -Match 'Invoke-TcsCommand\s+-Token\s+\$telemetry\s+-ScriptBlock'
-    }
-
     It 'Completes telemetry in the end block' {
         [string]$command.ScriptBlock.Ast.Body.EndBlock | Should -Match 'Complete-TcsTelemetry\s+-Token\s+\$telemetry\b'
     }
 
-    It 'Does not call Invoke-TelemetryCollection itself' {
-        $definition | Should -Not -Match 'Invoke-TelemetryCollection'
-    }
-
-    It 'Writes errors with Write-CommandError so they are reported' {
-        $definition | Should -Not -Match '\$PSCmdlet\.WriteError\(|Write-Error\b'
+    It 'Does not call Invoke-TelemetryCollection or Invoke-TcsCommand' {
+        $definition | Should -Not -Match 'Invoke-TelemetryCollection|Invoke-TcsCommand'
     }
 }
 

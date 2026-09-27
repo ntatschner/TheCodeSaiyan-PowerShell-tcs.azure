@@ -55,8 +55,6 @@
     https://learn.microsoft.com/powershell/module/microsoft.entra.groups/get-entragroup
 #>
 function Get-IntuneAppGroup {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'lastError',
-        Justification = 'Set inside the Invoke-TcsCommand script block and read in the end block.')]
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     [OutputType('Tcs.Azure.IntuneAppGroup')]
     param(
@@ -73,7 +71,6 @@ function Get-IntuneAppGroup {
 
     begin {
         $telemetry = Start-TcsTelemetry
-        # Invoke-TcsCommand does not see errors written with Write-CommandError, so the last one is reported in the end block
         $lastError = $null
 
         $prerequisiteError = Get-EntraPrerequisiteError -CommandName $MyInvocation.MyCommand.Name -RequiredCommand 'Get-EntraGroup'
@@ -84,7 +81,8 @@ function Get-IntuneAppGroup {
     }
 
     process {
-        Invoke-TcsCommand -Token $telemetry -ScriptBlock {
+        $completed = $false
+        try {
             if ($PSCmdlet.ParameterSetName -eq 'All') {
                 try {
                     Find-IntuneAppGroup | ForEach-Object { ConvertTo-IntuneAppGroupObject -Group $_ }
@@ -94,7 +92,7 @@ function Get-IntuneAppGroup {
                 }
                 catch {
                     $lastError = $_
-                    Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
+                    Write-Error -ErrorRecord $_
                 }
             }
             else {
@@ -104,7 +102,7 @@ function Get-IntuneAppGroup {
                         $exception = New-Object -TypeName System.ArgumentException -ArgumentList 'An application name cannot be blank or whitespace only.', 'Name'
                         $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'BlankName', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $appName
                         $lastError = $errorRecord
-                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
+                        $PSCmdlet.WriteError($errorRecord)
                         continue
                     }
                     try {
@@ -115,9 +113,22 @@ function Get-IntuneAppGroup {
                     }
                     catch {
                         $lastError = $_
-                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
+                        Write-Error -ErrorRecord $_
                     }
                 }
+            }
+            $completed = $true
+        }
+        catch {
+            $lastError = $_
+            throw
+        }
+        finally {
+            # The end block does not run after a terminating error or when a downstream command
+            # (for example Select-Object -First) stops the pipeline, so the run is completed here.
+            # $PSCmdlet.WriteError() with -ErrorAction Stop also ends the command without reaching the catch block.
+            if (-not $completed) {
+                Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
             }
         }
     }

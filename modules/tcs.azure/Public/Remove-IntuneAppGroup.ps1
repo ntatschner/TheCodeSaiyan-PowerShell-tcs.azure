@@ -67,8 +67,6 @@
     https://learn.microsoft.com/powershell/module/microsoft.entra.groups/remove-entragroup
 #>
 function Remove-IntuneAppGroup {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'lastError',
-        Justification = 'Set inside the Invoke-TcsCommand script block and read in the end block.')]
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'ByName')]
     param(
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true, ParameterSetName = 'ByName')]
@@ -91,7 +89,6 @@ function Remove-IntuneAppGroup {
 
     begin {
         $telemetry = Start-TcsTelemetry
-        # Invoke-TcsCommand does not see errors written with Write-CommandError, so the last one is reported in the end block
         $lastError = $null
 
         $prerequisiteError = Get-EntraPrerequisiteError -CommandName $MyInvocation.MyCommand.Name -RequiredCommand 'Get-EntraGroup', 'Remove-EntraGroup'
@@ -102,7 +99,8 @@ function Remove-IntuneAppGroup {
     }
 
     process {
-        Invoke-TcsCommand -Token $telemetry -ScriptBlock {
+        $completed = $false
+        try {
             $groups = New-Object -TypeName 'System.Collections.Generic.List[object]'
             if ($PSCmdlet.ParameterSetName -eq 'ById') {
                 foreach ($groupId in $Id) {
@@ -111,14 +109,14 @@ function Remove-IntuneAppGroup {
                     }
                     catch {
                         $lastError = $_
-                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
+                        Write-Error -ErrorRecord $_
                         continue
                     }
                     if (-not [regex]::IsMatch([string]$group.DisplayName, '^Intune-(AG|ACG)-', 'IgnoreCase, CultureInvariant')) {
                         $exception = New-Object -TypeName System.ArgumentException -ArgumentList "The group '$($group.DisplayName)' ($groupId) is not an Intune app group and was not deleted.", 'Id'
                         $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'NotAnIntuneAppGroup', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $groupId
                         $lastError = $errorRecord
-                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
+                        $PSCmdlet.WriteError($errorRecord)
                         continue
                     }
                     $groups.Add($group)
@@ -131,7 +129,7 @@ function Remove-IntuneAppGroup {
                         $exception = New-Object -TypeName System.ArgumentException -ArgumentList 'An application name cannot be blank or whitespace only.', 'Name'
                         $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'BlankName', ([System.Management.Automation.ErrorCategory]::InvalidArgument), $appName
                         $lastError = $errorRecord
-                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
+                        $PSCmdlet.WriteError($errorRecord)
                         continue
                     }
                     try {
@@ -139,7 +137,7 @@ function Remove-IntuneAppGroup {
                     }
                     catch {
                         $lastError = $_
-                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
+                        Write-Error -ErrorRecord $_
                         continue
                     }
                     if ($Intent) {
@@ -152,7 +150,7 @@ function Remove-IntuneAppGroup {
                         $exception = New-Object -TypeName System.Management.Automation.ItemNotFoundException -ArgumentList "No Intune app groups were found for '$appName'."
                         $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $exception, 'IntuneAppGroupNotFound', ([System.Management.Automation.ErrorCategory]::ObjectNotFound), $appName
                         $lastError = $errorRecord
-                        Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $errorRecord -Telemetry $telemetry
+                        $PSCmdlet.WriteError($errorRecord)
                         continue
                     }
                     foreach ($group in $found) {
@@ -171,8 +169,22 @@ function Remove-IntuneAppGroup {
                 }
                 catch {
                     $lastError = $_
-                    Write-CommandError -Cmdlet $PSCmdlet -ErrorRecord $_ -Telemetry $telemetry
+                    Write-Error -ErrorRecord $_
                 }
+            }
+            $completed = $true
+        }
+        catch {
+            # Reached when the caller asked for errors to stop (-ErrorAction Stop)
+            $lastError = $_
+            throw
+        }
+        finally {
+            # The end block does not run after a terminating error or when a downstream command
+            # (for example Select-Object -First) stops the pipeline, so the run is completed here.
+            # $PSCmdlet.WriteError() with -ErrorAction Stop also ends the command without reaching the catch block.
+            if (-not $completed) {
+                Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError
             }
         }
     }
