@@ -53,9 +53,7 @@ Every file in `Public/` must also be listed in `FunctionsToExport` in `tcs.azure
   `Complete-TcsTelemetry -Token $telemetry -ErrorRecord $lastError` in `end` and in the
   `process` block's `finally` when the body did not complete (the end block does not run after
   a terminating error or a stopped pipeline). Keep every written error in `$lastError` so the
-  run is reported as failed. Do not use `Invoke-TcsCommand`: inside its script block, errors and
-  warnings do not reach the command's `-ErrorVariable`/`-WarningVariable` and error IDs change.
-  `tests/Module.Tests.ps1` checks the wiring.
+  run is reported as failed. `tests/Module.Tests.ps1` checks the wiring.
 - **Help:** every exported function has comment-based help with a synopsis, description,
   every parameter and at least one example.
 - **Tests:** new behaviour and bug fixes come with Pester tests. Tests must not touch the real
