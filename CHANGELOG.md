@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-27
+
+Requires tcs.core 0.4.0 or later.
+
+### Changed
+- Every command records telemetry with the tcs.core 0.4.0 wrapper (`Start-TcsTelemetry`,
+  `Invoke-TcsCommand -Token`, `Complete-TcsTelemetry`) instead of its own calls to
+  `Invoke-TelemetryCollection`. One event is still sent per run (one for a whole pipeline),
+  reported as failed when the command wrote an error. When a tcs.azure command calls another
+  tcs.azure command, only the outer command is recorded.
+- Non-terminating errors are written with the command's `$PSCmdlet.WriteError()` (through the
+  new private `Write-CommandError`), so they keep the command name in their error ID as before
+  (for example `PathNotFound,Get-IntuneAppGroup`). Error messages, IDs and categories are
+  unchanged. For Entra call failures, `-ErrorVariable` now holds the one error the command
+  wrote; before, it also held the underlying error records of the failed call.
+- The "already exists" warnings of `New-IntuneAppGroup` and `New-TcsEntraDepartmentalGroup`
+  are written with `$PSCmdlet.WriteWarning()` so `-WarningVariable` still collects them.
+- The minimum tcs.core version is 0.4.0 (manifest, CI and documentation).
+
 ## [0.2.0] - 2026-09-24
 
 Requires tcs.core 0.3.0 or later.

@@ -9,7 +9,7 @@ names and Intune app assignment groups. Part of the TheCodeSaiyan PowerShell sui
 ## Requirements
 
 - Windows PowerShell 5.1 or PowerShell 7 on Windows, Linux or macOS
-- [tcs.core](https://www.powershellgallery.com/packages/tcs.core) **0.3.0 or later** (declared in
+- [tcs.core](https://www.powershellgallery.com/packages/tcs.core) **0.4.0 or later** (declared in
   `RequiredModules`; install it first when importing from source)
 - For the Entra commands (`New-IntuneAppGroup`, `Get-IntuneAppGroup`, `Remove-IntuneAppGroup`,
   `New-TcsEntraDepartmentalGroup`): the Microsoft Entra PowerShell module
@@ -25,7 +25,7 @@ names and Intune app assignment groups. Part of the TheCodeSaiyan PowerShell sui
 ### From GitHub source
 
 ```powershell
-Install-Module -Name tcs.core -MinimumVersion 0.3.0 -Scope CurrentUser
+Install-Module -Name tcs.core -MinimumVersion 0.4.0 -Scope CurrentUser
 git clone https://github.com/ntatschner/TheCodeSaiyan-PowerShell-tcs.azure.git
 Import-Module ./TheCodeSaiyan-PowerShell-tcs.azure/modules/tcs.azure/tcs.azure.psd1
 
@@ -108,7 +108,9 @@ telemetry endpoint is configured.
 
 Each event contains: time (UTC), module and command name, module version, duration, success,
 the exception **type** on failure, PowerShell version and edition, OS family, PowerShell host
-name, and a random installation ID created on first use.
+name, and a random installation ID created on first use. One event is sent per command run
+(one for a whole pipeline); when a tcs.azure command calls another, only the outer command is
+recorded.
 
 It **never** contains: user names, machine names, file paths, hardware serial numbers, IP-based
 identifiers, command arguments (such as group or application names), tenant details or error
