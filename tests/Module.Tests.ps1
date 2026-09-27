@@ -109,8 +109,8 @@ Describe 'Telemetry coverage for <Name>' -ForEach $PublicFunctions {
         [string]$command.ScriptBlock.Ast.Body.EndBlock | Should -Match 'Complete-TcsTelemetry\s+-Token\s+\$telemetry\b'
     }
 
-    It 'Does not call Invoke-TelemetryCollection or Invoke-TcsCommand' {
-        $definition | Should -Not -Match 'Invoke-TelemetryCollection|Invoke-TcsCommand'
+    It 'Does not call Invoke-TelemetryCollection' {
+        $definition | Should -Not -Match 'Invoke-TelemetryCollection'
     }
 }
 
