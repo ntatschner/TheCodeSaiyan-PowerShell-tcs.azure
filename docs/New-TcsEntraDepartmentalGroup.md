@@ -14,7 +14,7 @@ Creates a departmental security group in Microsoft Entra ID.
 
 ```
 New-TcsEntraDepartmentalGroup [-Prefix] <String> [[-Suffix] <String>] [-Division] <String>
- [[-Department] <String>] [-DynamicMembership] [[-Owner] <String[]>] [-ProgressAction <ActionPreference>]
+ [[-Department] <String>] [-DynamicMembership] [[-Owner] <String[]>]
  [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -195,21 +195,6 @@ Prompts you for confirmation before running the cmdlet.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
 
 Required: False
 Position: Named

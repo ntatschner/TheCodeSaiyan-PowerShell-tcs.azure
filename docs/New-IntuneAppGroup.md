@@ -13,7 +13,7 @@ Creates Intune app assignment groups (for example "Available" and "Required") in
 ## SYNTAX
 
 ```
-New-IntuneAppGroup [-Name] <String[]> [-Intent <String[]>] [-Collection] [-ProgressAction <ActionPreference>]
+New-IntuneAppGroup [-Name] <String[]> [-Intent <String[]>] [-Collection]
  [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -161,21 +161,6 @@ Prompts you for confirmation before running the cmdlet.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
 
 Required: False
 Position: Named

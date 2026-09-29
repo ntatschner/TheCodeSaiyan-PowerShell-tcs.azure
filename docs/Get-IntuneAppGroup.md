@@ -14,12 +14,12 @@ Gets Intune app assignment groups from Microsoft Entra ID.
 
 ### ByName (Default)
 ```
-Get-IntuneAppGroup [-Name] <String[]> [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-IntuneAppGroup [-Name] <String[]> [<CommonParameters>]
 ```
 
 ### All
 ```
-Get-IntuneAppGroup [-All] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-IntuneAppGroup [-All] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -87,21 +87,6 @@ Aliases:
 Required: True
 Position: Named
 Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

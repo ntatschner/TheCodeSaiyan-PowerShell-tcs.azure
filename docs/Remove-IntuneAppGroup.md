@@ -14,13 +14,13 @@ Deletes Intune app assignment groups from Microsoft Entra ID.
 
 ### ByName (Default)
 ```
-Remove-IntuneAppGroup [-Name] <String[]> [-Intent <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf]
+Remove-IntuneAppGroup [-Name] <String[]> [-Intent <String[]>] [-WhatIf]
  [-Confirm] [<CommonParameters>]
 ```
 
 ### ById
 ```
-Remove-IntuneAppGroup -Id <String[]> [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+Remove-IntuneAppGroup -Id <String[]> [-WhatIf] [-Confirm]
  [<CommonParameters>]
 ```
 
@@ -142,21 +142,6 @@ Prompts you for confirmation before running the cmdlet.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
 
 Required: False
 Position: Named
